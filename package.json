@@ -1,10 +1,13 @@
 {
 	"dependencies": {
+		"@preact/signals": "^2.0.1",
+		"@preact/signals-core": "^1.8.0",
 		"chalk": "^5.4.1",
 		"preact": "^10.25.3"
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.9.3",
+		"@types/node": "^22.10.7",
 		"typescript": "^5.7.2",
 		"vite": "^6.0.4"
 	},
@@ -13,7 +16,7 @@
 		"build": "vite build",
 		"dev": "vite",
 		"preview": "vite preview",
-		"serve": "serve ./dist -l 3000 -n"
+		"serve": "serve ./dist -l 3000 -n -s"
 	},
 	"type": "module"
 }
