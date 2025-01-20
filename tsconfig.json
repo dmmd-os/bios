@@ -1,25 +1,26 @@
 {
 	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"jsx": "react-jsx",
-		"jsxImportSource": "preact",
+		"allowImportingTsExtensions": true,
+		"isolatedModules": true,
+		"lib": [
+			"ES2020",
+			"DOM",
+			"DOM.Iterable"
+		],
 		"module": "ESNext",
+		"moduleDetection": "force",
 		"moduleResolution": "bundler",
 		"noEmit": true,
-		"paths": {
-			"react": [
-				"./node_modules/preact/compat/"
-			],
-			"react-dom": [
-				"./node_modules/preact/compat/"
-			]
-		},
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedSideEffectImports": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
 		"skipLibCheck": true,
-		"target": "ES2020"
+		"strict": true,
+		"target": "ES2020",
+		"useDefineForClassFields": true
 	},
 	"include": [
-		"node_modules/vite/client.d.ts",
-		"**/*"
+		"src"
 	]
 }
