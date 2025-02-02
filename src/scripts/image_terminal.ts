@@ -19,12 +19,13 @@ export class ImageTerminal {
 	private _highlight: HTMLDivElement;
 	private _history: Set<string>;
 	private _input: string;
-	// @ts-ignore
-	private _states: Map<string, any>;
 	private _tasks: Set<Promise<any>>;
 	private _textbox: HTMLDivElement;
 	private _timeline: string[] | null;
+	private _underline: HTMLDivElement;
+	readonly commands: Map<string, () => Promise<void>>;
 	readonly frame: HTMLDivElement;
+	readonly states: Map<string, any>;
 
 	// Constructs terminal
 	constructor() {
@@ -36,14 +37,19 @@ export class ImageTerminal {
 		this._highlight = document.createElement("div");
 		this._history = new Set();
 		this._input = "";
-		this._states = new Map();
 		this._tasks = new Set();
 		this._textbox = document.createElement("div");
 		this._timeline = [];
+		this._underline = document.createElement("div");
+		this.commands = new Map();
 		this.frame = document.createElement("div");
+		this.states = new Map();
 
 		// Initializes highlight
 		this._highlight.classList.add("highlight");
+
+		// Initializes underline
+		this._underline.classList.add("underline");
 		
 		// Initializes textbox
 		this._textbox.classList.add("textbox");
@@ -51,6 +57,7 @@ export class ImageTerminal {
 		// Initializes field
 		this._field.classList.add("field");
 		this._field.appendChild(this._highlight);
+		this._field.appendChild(this._underline);
 		this._field.appendChild(this._textbox);
 
 		// Initializes frame
@@ -147,7 +154,7 @@ export class ImageTerminal {
 		key.preventDefault();
 
 		// Defines utility keys
-		if(key.key === "Enter") this.insert("\n");
+		if(key.key === "Enter") this.write(this.input + "\n");
 		else if(key.key === "Backspace" || key.key === "Delete") {
 			if(this.anchor === this.cursor) this.cursor += key.key === "Backspace" ? -1 : 1;
 			this.insert("");
@@ -220,9 +227,16 @@ export class ImageTerminal {
 
 	// Renders terminal
 	render(): void {
-		this._textbox.innerText = "> " + (this.anchor === this.cursor ? this.input.slice(0, this.cursor) + "|" + this.input.slice(this.cursor) :
-			this.input.slice(0, Math.min(this.anchor, this.cursor)) + "[" + this.input.slice(Math.min(this.anchor, this.cursor), Math.max(this.anchor, this.cursor)) + "]" + this.input.slice(Math.max(this.anchor, this.cursor)));
-		// console.log(this);
+
+		// Renders highlight
+		this._highlight.innerText = " ".repeat(Math.min(this.anchor, this.cursor) + 2);
+		this._highlight.setAttribute("data-highlight", " ".repeat(Math.abs(this.anchor - this.cursor)));
+
+		// Renders underline
+		this._underline.innerHTML = " ".repeat(this.cursor + 2) + "_";
+		
+		// Renders textbox
+		this._textbox.innerText = "> " + this.input;
 	}
 
 	// Runs command
@@ -235,7 +249,7 @@ export class ImageTerminal {
 	}
 
 	// Writes input
-	write(input: string, position: number = this._input.length): void {
+	write(input: string, position: number = input.length): void {
 		// Updates input
 		const updated = input.replace(/[^\na-zA-Z0-9()[\]{}<>'"`!?@#$%^&~_+\-*/=\\|;:,. ]/g, "");
 		if(this._input === updated) return;
@@ -253,9 +267,11 @@ export class ImageTerminal {
 			this.print("> " + this._input);
 
 			// Updates history
-			this._history.delete(this._input);
-			this._history.add(this._input);
-			this._timeline = null;
+			if(this._input.trim().length != 0) {
+				this._history.delete(this._input);
+				this._history.add(this._input);
+				this._timeline = null;
+			}
 			
 			// Runs command
 			this.run(ImageTerminal.parse(this._input));

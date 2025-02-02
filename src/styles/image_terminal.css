@@ -1,11 +1,39 @@
+/* Terminal */
 .terminal {
 	background-color: #000000;
 	color: #ffffff;
 	font-family: "Free Pixel";
-	font-size: 50px;
-	height: 100%;
+	font-size: 15px;
+	height: calc(100% - 10px);
 	margin: 0px;
 	overflow: auto;
-	padding: 0px;
-	width: 100%;
+	padding: 5px 5px;
+	width: calc(100% - 10px);
+	white-space: break-spaces;
+	word-break: break-all;
+}
+
+/* Field */
+.field {
+	position: relative;
+}
+
+/* Highlight */
+.highlight {
+	pointer-events: none;
+	position: absolute;
+	user-select: none;
+}
+
+.highlight::after {
+	background-color: #ffffff8f;
+	content: attr(data-highlight);
+}
+
+/* Underline */
+.underline {
+	pointer-events: none;
+	position: absolute;
+	top: 3px;
+	user-select: none;
 }
