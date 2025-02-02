@@ -1,0 +1,11 @@
+.terminal {
+	background-color: #000000;
+	color: #ffffff;
+	font-family: "Free Pixel";
+	font-size: 50px;
+	height: 100%;
+	margin: 0px;
+	overflow: auto;
+	padding: 0px;
+	width: 100%;
+}

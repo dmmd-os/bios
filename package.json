@@ -12,7 +12,8 @@
 	"scripts": {
 		"build": "tsc && vite build",
 		"dev": "vite",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"serve": "serve ./dist -l 3000 -n -s"
 	},
 	"type": "module",
 	"version": "0.0.0"
