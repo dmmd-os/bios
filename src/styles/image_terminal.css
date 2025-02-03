@@ -37,3 +37,8 @@
 	top: 3px;
 	user-select: none;
 }
+
+/* Line */
+.log, .highlight, .underline, .textbox {
+	min-height: 1em;
+}
