@@ -9,6 +9,12 @@ export class ImageBios {
 	readonly drive: ImageDrive;
 	readonly events: ImageEvents;
 	readonly stdio: ImageStdio;
+	
+	// Fetches source through remote proxy
+	static async remoteFetch(url: string): Promise<string> {
+		// Fetches source
+		return (await fetch("https://remote.iipython.dev/" + url)).text();
+	}
 }
 
 // Exports

@@ -19,7 +19,7 @@ export class ImageDrive {
 	}
 	
 	// Deletes key from database
-	async deleteKey(key: string): Promise<void> {
+	async deleteOne(key: string): Promise<void> {
 		// Creates transaction
 		await this.transact((store: IDBObjectStore) => {
 			// Deletes key from store
@@ -28,16 +28,131 @@ export class ImageDrive {
 	}
 	
 	// Deletes multiple keys from database
-	async deleteTable(keys: string[]): Promise<void> {
+	async deleteBulk(keys: string[]): Promise<void> {
 		// Creates transaction
-		await this.transact((store) => {
+		await this.transact((store: IDBObjectStore) => {
 			// Deletes multiple keys from store
 			for(let i = 0; i < keys.length; i++) store.delete(keys[i]);
 		}, "readwrite");
 	}
+
+	// Retrieves all keys from database
+	async fetchKeys(): Promise<string[]> {
+		// Creates transaction
+		let keys: string[] = [];
+		await this.transact((store: IDBObjectStore) => {
+			// Retrieves keys from store
+			const request = store.getAllKeys();
+			request.onsuccess = () => keys = request.result as string[];
+		}, "readonly");
+
+		// Returns keys
+		return keys;
+	}
+
+	// Retrieves all pairs from database
+	async fetchTable(): Promise<{ [ key: string ]: unknown }> {
+		// Creates transaction
+		const table: { [ key: string ]: unknown } = {};
+		let keys: string[] = [];
+		let values: unknown[] = [];
+		await this.transact((store: IDBObjectStore) => {
+			// Retrieves pairs from store
+			const requestKeys = store.getAllKeys();
+			const requestValues = store.getAll();
+			requestKeys.onsuccess = () => keys = requestKeys.result as string[];
+			requestValues.onsuccess = () => values = requestValues.result as unknown[];
+		}, "readonly");
+
+		// Constructs table
+		for(let i = 0; i < keys.length; i++) table[keys[i]] = values[i];
+
+		// Returns table
+		return table;
+	}
+
+	// Retrieves all values from database
+	async fetchValues(): Promise<unknown[]> {
+		// Creates transaction
+		let values: unknown[] = [];
+		await this.transact((store: IDBObjectStore) => {
+			// Retrieves values from store
+			const request = store.getAll();
+			request.onsuccess = () => values = request.result as unknown[];
+		}, "readonly");
+
+		// Returns valuess
+		return values;
+	}
+
+	// Detects whether key exists in database
+	async probeOne(key: string): Promise<boolean> {
+		// Creates transaction
+		let probed: boolean = false;
+		await this.transact((store: IDBObjectStore) => {
+			// Probes key in store
+			const request = store.getKey(key);
+			request.onsuccess = () => probed = typeof request.result !== "undefined";
+		}, "readonly");
+
+		// Returns probed status
+		return probed;
+	}
+
+	// Detects whether multiple keys exists in database
+	async probeBulk(keys: string[]): Promise<{ [ key: string ]: boolean }> {
+		// Creates transaction
+		const table: { [ key: string ]: boolean } = {};
+		await this.transact((store: IDBObjectStore) => {
+			// Probes key in store
+			for(let i = 0; i < keys.length; i++) {
+				const key = keys[i];
+				if(key in table) continue;
+				const request = store.getKey(key);
+				request.onsuccess = () => table[key] = typeof request.result !== "undefined";
+				table[key] = false;
+			}
+		}, "readonly");
+
+		// Returns probed status table
+		return table;
+	}
+
+	// Retrieves value from database
+	async readOne(key: string): Promise<unknown> {
+		// Creates transaction
+		let value: unknown = void 0;
+		await this.transact((store: IDBObjectStore) => {
+			// Retrieves value from store
+			const request = store.get(key);
+			request.onsuccess = () => value = request.result;
+		}, "readonly");
+
+		// Returns value
+		return value;
+	}
+
+	// Retrieves multiple values from database
+	async readBulk(keys: string[]): Promise<{ [ key: string ]: unknown }> {
+		// Creates transaction
+		const table: { [ key: string ]: unknown } = {};
+		await this.transact((store: IDBObjectStore) => {
+			// Retrieves values from store
+			for(let i = 0; i < keys.length; i++) {
+				const key = keys[i];
+				if(key in table) continue;
+				const request = store.get(key);
+				request.onsuccess = () => table[key] = request.result;
+				table[key] = void 0;
+			}
+		}, "readonly");
+
+		// Returns value table
+		return table;
+	}
 	
 	// Fetches image drive from reference
-	static fetch(reference: string): Promise<ImageDrive> {
+	static request(reference: string): Promise<ImageDrive> {
 		// Returns image drive
 		return new Promise((resolve) => {
 			// Opens database
@@ -51,38 +166,8 @@ export class ImageDrive {
 		});
 	}
 
-	// Retrieves value from database
-	async readKey(key: string): Promise<unknown> {
-		// Creates transaction
-		let value;
-		await this.transact((store) => {
-			// Retrieves value from store
-			const request = store.get(key);
-			request.onsuccess = () => value = request.result;
-		});
-
-		// Returns value
-		return value;
-	}
-
-	// Retrieves multiple values from database
-	async readTable(keys: string[]): Promise<{ [ key: string ]: unknown }> {
-		// Creates transaction
-		const table: { [ key: string ]: unknown } = {};
-		await this.transact((store) => {
-			// Retrieves values from store
-			for(let i = 0; i < keys.length; i++) {
-				const request = store.get(keys[i]);
-				request.onsuccess = () => table[keys[i]] = request.result;
-			}
-		});
-
-		// Returns values
-		return table;
-	}
-
 	// Creates transaction
-	transact(payload: (store: IDBObjectStore) => void, mode: "readonly" | "readwrite" = "readonly"): Promise<void> {
+	transact(payload: (store: IDBObjectStore) => void, mode: "readonly" | "readwrite"): Promise<void> {
 		// Returns transaction
 		return new Promise((resolve) => {
 			const transaction = this.database.transaction("data", mode);
@@ -92,18 +177,18 @@ export class ImageDrive {
 	}
 
 	// Updates value in database
-	async writeKey(key: string, value: unknown): Promise<void> {
+	async writeOne(key: string, value: unknown): Promise<void> {
 		// Creates transaction
-		await this.transact((store) => {
+		await this.transact((store: IDBObjectStore) => {
 			// Updates value in store
 			store.put(value, key)
 		}, "readwrite");
 	}
 
 	// Updates multiple values in database
-	async writeTable(table: { [ key: string ]: unknown }): Promise<void> {
+	async writeBulk(table: { [ key: string ]: unknown }): Promise<void> {
 		// Creates transaction
-		await this.transact((store) => {
+		await this.transact((store: IDBObjectStore) => {
 			// Updates values in store
 			for(let key in table) store.put(table[key], key);
 		}, "readwrite");
