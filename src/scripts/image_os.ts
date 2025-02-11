@@ -1,10 +1,33 @@
 // Imports
 import ImageDrive from "./image_drive";
-import ImageEvents from "./image_events";
 
 // Defines image os
 export class ImageOs {
 	// Declares fields
 	readonly drive: ImageDrive;
-	readonly events: ImageEvents;
+	readonly frame: HTMLIFrameElement;
+	readonly reference: string;
+	readonly source: string;
+
+	// Constructs image os
+	constructor(reference: string, source: string, drive: ImageDrive) {
+		// Initializes fields
+		this.drive = drive;
+		this.frame = document.createElement("iframe");
+		this.reference = reference;
+		this.source = source;
+
+		// Initializes frame
+		this.frame.srcdoc = source;
+	}
+
+	// Requests image os
+	static async request(reference: string, source: string): Promise<ImageOs> {
+		// Initializes image os
+		const drive = await ImageDrive.request(reference);
+		return new ImageOs(reference, source, drive);
+	}
 }
+
+// Exports
+export default ImageOs;

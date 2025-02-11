@@ -2,11 +2,13 @@
 export class ImageDrive {
 	// Declares fields
 	readonly database: IDBDatabase;
+	readonly reference: string;
 
 	// Constructs image drive
-	constructor(database: IDBDatabase) {
+	constructor(reference: string, database: IDBDatabase) {
 		// Initializes fields
 		this.database = database;
+		this.reference = reference;
 	}
 
 	// Clears database
@@ -151,7 +153,7 @@ export class ImageDrive {
 		return table;
 	}
 	
-	// Fetches image drive from reference
+	// Requests image drive
 	static request(reference: string): Promise<ImageDrive> {
 		// Returns image drive
 		return new Promise((resolve) => {
@@ -162,7 +164,7 @@ export class ImageDrive {
 			request.onupgradeneeded = () => request.result.createObjectStore("data");
 
 			// Resolves database
-			request.onsuccess = () => resolve(new ImageDrive(request.result));
+			request.onsuccess = () => resolve(new ImageDrive(reference, request.result));
 		});
 	}
 
