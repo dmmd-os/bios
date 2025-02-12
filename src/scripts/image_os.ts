@@ -18,6 +18,7 @@ export class ImageOs {
 		this.source = source;
 
 		// Initializes frame
+		this.frame.classList.add("image-os");
 		this.frame.srcdoc = source;
 	}
 
@@ -25,6 +26,8 @@ export class ImageOs {
 	static async request(reference: string, source: string): Promise<ImageOs> {
 		// Initializes image os
 		const drive = await ImageDrive.request(reference);
+
+		// Returns image os
 		return new ImageOs(reference, source, drive);
 	}
 }

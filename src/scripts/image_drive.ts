@@ -164,7 +164,13 @@ export class ImageDrive {
 			request.onupgradeneeded = () => request.result.createObjectStore("data");
 
 			// Resolves database
-			request.onsuccess = () => resolve(new ImageDrive(reference, request.result));
+			request.onsuccess = () => {
+				// Handles state update
+				request.result.onversionchange = () => request.result.close();
+
+				// Resolves database
+				resolve(new ImageDrive(reference, request.result));
+			};
 		});
 	}
 
@@ -175,6 +181,16 @@ export class ImageDrive {
 			const transaction = this.database.transaction("data", mode);
 			payload(transaction.objectStore("data"));
 			transaction.oncomplete = () => resolve();
+		});
+	}
+
+	// Deletes database
+	static wipe(reference: string): Promise<void> {
+		// Creates request
+		return new Promise((resolve) => {
+			// Deletes database
+			const request = indexedDB.deleteDatabase(reference);
+			request.onsuccess = () => resolve();
 		});
 	}
 
