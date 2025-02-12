@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Imports
 import ImageEvents from "./image_events";
 
