@@ -3,7 +3,7 @@ export class ImageProxy {
 	// Fetches resource directly
 	static async fetch(url: string, remote: boolean): Promise<Response> {
 		// Fetches resource
-		return await fetch(remote ? ImageProxy.wrap(url) : url);
+		return await fetch(remote ? ImageProxy.remotify(url) : url);
 	}
 
 	// Fetches json
@@ -13,7 +13,7 @@ export class ImageProxy {
 	}
 
 	// Wraps url through a remote server
-	static wrap(url: string): string {
+	static remotify(url: string): string {
 		// Wraps url
 		return "https://remote.iipython.dev/" + url;
 	}
