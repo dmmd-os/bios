@@ -1,0 +1,13 @@
+.image-terminal {
+	background-color: #000000;
+	color: #ffffff;
+	font-family: "Free Pixel";
+	font-size: 15px;
+	height: calc(100% - 10px);
+	margin: 0px;
+	overflow: auto;
+	padding: 5px 5px;
+	width: calc(100% - 10px);
+	white-space: break-spaces;
+	word-break: break-all;
+}

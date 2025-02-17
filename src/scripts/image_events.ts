@@ -1,7 +1,7 @@
 // Defines image events
 export class ImageEvents {
 	// Declares fields
-	readonly listeners: { [ event: string ]: ((...parameters: unknown[]) => void)[] };
+	readonly listeners: { [ event: string ]: ((...parameters: unknown[]) => (void | Promise<void>))[] };
 
 	// Constructs image events
 	constructor() {
@@ -20,7 +20,7 @@ export class ImageEvents {
 	}
 
 	// Removes all same-reference listeners
-	off(event: string, listener: (...parameters: unknown[]) => void): void {
+	off(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Blocks empty event
 		if(!(event in this.listeners)) return;
 
@@ -35,7 +35,7 @@ export class ImageEvents {
 	}
 
 	// Appends an listener
-	on(event: string, listener: (...parameters: unknown[]) => void): void {
+	on(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Creates new event
 		if(!(event in this.listeners)) this.listeners[event] = [];
 		
@@ -44,7 +44,7 @@ export class ImageEvents {
 	}
 
 	// Appends an one-time listener
-	once(event: string, listener: (...parameters: unknown[]) => void): void {
+	once(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Defines wrapper
 		const wrapper = () => {
 			listener();

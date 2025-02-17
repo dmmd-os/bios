@@ -68,29 +68,15 @@ export class ImageStdio {
 		return lines;
 	}
 
-	// Reads and flushes line in buffer
-	readLine(length: number): string[];
-	readLine(length: null): string;
-	readLine(length: number | null = null): string[] | string {
-		// Reads line
-		return length === null ? this.read("\n") : this.readBulk("\n", length);
-	}
-
 	// Inserts content to buffer at specified location
 	write(content: string, cursor: number = this._buffer.length, anchor: number = cursor): void {
 		// Initializes buffer
 		const before = this._buffer.slice(0, Math.min(cursor, anchor));
-		const purified = ImageStdio.purify(content);
+		const chunk = ImageStdio.purify(content);
 		const after = this._buffer.slice(Math.max(cursor, anchor));
 
 		// Updates buffer
-		this._buffer = before + purified + after;
-	}
-
-	// Inserts content and appends new line to buffer at specified location
-	writeLine(content: string, cursor: number = this._buffer.length, anchor: number = cursor): void {
-		// Writes line
-		this.write(content + "\n", cursor, anchor);
+		this._buffer = before + chunk + after;
 	}
 }
 
