@@ -21,6 +21,7 @@
 		"useDefineForClassFields": true
 	},
 	"include": [
-		"src"
-, "core/constants.ts"	]
+		"src",
+		"core/constants.ts"
+	]
 }
