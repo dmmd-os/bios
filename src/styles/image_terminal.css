@@ -1,3 +1,4 @@
+/* Image terminal */
 .image-terminal {
 	background-color: #000000;
 	color: #ffffff;
@@ -10,4 +11,30 @@
 	width: calc(100% - 10px);
 	white-space: break-spaces;
 	word-break: break-all;
+}
+
+/* Image terminal stdin */
+.image-terminal-stdin {
+	position: relative;
+}
+
+.image-terminal-cursor,
+.image-terminal-highlight,
+.image-terminal-text {
+	position: absolute;
+}
+
+.image-terminal-cursor,
+.image-terminal-highlight {
+	pointer-events: none;
+	user-select: none;
+}
+
+.image-terminal-cursor {
+	top: 3px;
+}
+
+.image-terminal-highlight::after {
+	background-color: #ffffff8f;
+	content: attr(data-highlight);
 }

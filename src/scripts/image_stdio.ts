@@ -1,12 +1,16 @@
+import ImageEvents from "./image_events";
+
 // Defines image stdio
 export class ImageStdio {
 	// Declares fields
 	private _buffer: string;
+	readonly events: ImageEvents;
 
 	// Constructs image stdio
 	constructor() {
 		// Initializes fields
 		this._buffer = "";
+		this.events = new ImageEvents();
 	}
 
 	// Retrieves buffer

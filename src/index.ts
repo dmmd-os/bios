@@ -22,12 +22,12 @@ import "./styles/image_terminal.css";
 	window.ImageProxy = ImageProxy;
 	// document.getElementById("app")?.appendChild(os.frame);
 
-	declare const __COMMIT_HASH__: string;
-	document.getElementById("banner")!.innerText += " " + __COMMIT_HASH__;
+	// declare const __COMMIT_HASH__: string;
+	// document.getElementById("banner")!.innerText += " " + __COMMIT_HASH__;
 	const stdio = window.stdio = new ImageStdio();
 
-	const terminal = new ImageTerminal();
+	const terminal = bios.terminal;
 	window.terminal = terminal;
 	document.getElementById("app")?.appendChild(terminal.frame.container);
-	setInterval(() => terminal.render());
+	// setInterval(() => terminal.render());
 })();

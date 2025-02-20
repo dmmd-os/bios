@@ -13,37 +13,33 @@ export class ImageDrive {
 
 	// Clears database
 	async clear(): Promise<void> {
-		// Creates transaction
+		// Clears store
 		await this.transact((store: IDBObjectStore) => {
-			// Clears store
 			store.clear();
 		}, "readwrite");
 	}
 	
 	// Deletes key from database
 	async deleteOne(key: string): Promise<void> {
-		// Creates transaction
+		// Deletes key from store
 		await this.transact((store: IDBObjectStore) => {
-			// Deletes key from store
 			store.delete(key);
 		}, "readwrite");
 	}
 	
 	// Deletes multiple keys from database
 	async deleteBulk(keys: string[]): Promise<void> {
-		// Creates transaction
+		// Deletes multiple keys from store
 		await this.transact((store: IDBObjectStore) => {
-			// Deletes multiple keys from store
 			for(let i = 0; i < keys.length; i++) store.delete(keys[i]);
 		}, "readwrite");
 	}
 
 	// Retrieves all keys from database
 	async fetchKeys(): Promise<string[]> {
-		// Creates transaction
+		// Retrieves keys from store
 		let keys: string[] = [];
 		await this.transact((store: IDBObjectStore) => {
-			// Retrieves keys from store
 			const request = store.getAllKeys();
 			request.onsuccess = () => keys = request.result as string[];
 		}, "readonly");
@@ -54,12 +50,11 @@ export class ImageDrive {
 
 	// Retrieves all pairs from database
 	async fetchTable(): Promise<{ [ key: string ]: unknown }> {
-		// Creates transaction
+		// Retrieves pairs from store
 		const table: { [ key: string ]: unknown } = {};
 		let keys: string[] = [];
 		let values: unknown[] = [];
 		await this.transact((store: IDBObjectStore) => {
-			// Retrieves pairs from store
 			const requestKeys = store.getAllKeys();
 			const requestValues = store.getAll();
 			requestKeys.onsuccess = () => keys = requestKeys.result as string[];
@@ -75,10 +70,9 @@ export class ImageDrive {
 
 	// Retrieves all values from database
 	async fetchValues(): Promise<unknown[]> {
-		// Creates transaction
+		// Retrieves values from store
 		let values: unknown[] = [];
 		await this.transact((store: IDBObjectStore) => {
-			// Retrieves values from store
 			const request = store.getAll();
 			request.onsuccess = () => values = request.result as unknown[];
 		}, "readonly");
@@ -89,10 +83,9 @@ export class ImageDrive {
 
 	// Detects whether key exists in database
 	async probeOne(key: string): Promise<boolean> {
-		// Creates transaction
+		// Probes key in store
 		let probed: boolean = false;
 		await this.transact((store: IDBObjectStore) => {
-			// Probes key in store
 			const request = store.getKey(key);
 			request.onsuccess = () => probed = typeof request.result !== "undefined";
 		}, "readonly");
@@ -103,10 +96,9 @@ export class ImageDrive {
 
 	// Detects whether multiple keys exists in database
 	async probeBulk(keys: string[]): Promise<{ [ key: string ]: boolean }> {
-		// Creates transaction
+		// Probes key in store
 		const table: { [ key: string ]: boolean } = {};
 		await this.transact((store: IDBObjectStore) => {
-			// Probes key in store
 			for(let i = 0; i < keys.length; i++) {
 				const key = keys[i];
 				if(key in table) continue;
@@ -122,10 +114,9 @@ export class ImageDrive {
 
 	// Retrieves value from database
 	async readOne(key: string): Promise<unknown> {
-		// Creates transaction
+		// Retrieves value from store
 		let value: unknown = void 0;
 		await this.transact((store: IDBObjectStore) => {
-			// Retrieves value from store
 			const request = store.get(key);
 			request.onsuccess = () => value = request.result;
 		}, "readonly");
@@ -136,10 +127,9 @@ export class ImageDrive {
 
 	// Retrieves multiple values from database
 	async readBulk(keys: string[]): Promise<{ [ key: string ]: unknown }> {
-		// Creates transaction
+		// Retrieves values from store
 		const table: { [ key: string ]: unknown } = {};
 		await this.transact((store: IDBObjectStore) => {
-			// Retrieves values from store
 			for(let i = 0; i < keys.length; i++) {
 				const key = keys[i];
 				if(key in table) continue;
@@ -162,13 +152,8 @@ export class ImageDrive {
 
 			// Initializes database
 			request.onupgradeneeded = () => request.result.createObjectStore("data");
-
-			// Resolves database
 			request.onsuccess = () => {
-				// Handles state update
 				request.result.onversionchange = () => request.result.close();
-
-				// Resolves database
 				resolve(new ImageDrive(reference, request.result));
 			};
 		});
@@ -176,7 +161,7 @@ export class ImageDrive {
 
 	// Creates transaction
 	transact(payload: (store: IDBObjectStore) => void, mode: "readonly" | "readwrite"): Promise<void> {
-		// Returns transaction
+		// Creates transaction
 		return new Promise((resolve) => {
 			const transaction = this.database.transaction("data", mode);
 			payload(transaction.objectStore("data"));
@@ -186,9 +171,8 @@ export class ImageDrive {
 
 	// Deletes database
 	static wipe(reference: string): Promise<void> {
-		// Creates request
+		// Deletes database
 		return new Promise((resolve) => {
-			// Deletes database
 			const request = indexedDB.deleteDatabase(reference);
 			request.onsuccess = () => resolve();
 		});
@@ -196,18 +180,16 @@ export class ImageDrive {
 
 	// Updates value in database
 	async writeOne(key: string, value: unknown): Promise<void> {
-		// Creates transaction
+		// Updates value in store
 		await this.transact((store: IDBObjectStore) => {
-			// Updates value in store
 			store.put(value, key)
 		}, "readwrite");
 	}
 
 	// Updates multiple values in database
 	async writeBulk(table: { [ key: string ]: unknown }): Promise<void> {
-		// Creates transaction
+		// Updates values in store
 		await this.transact((store: IDBObjectStore) => {
-			// Updates values in store
 			for(let key in table) store.put(table[key], key);
 		}, "readwrite");
 	}
