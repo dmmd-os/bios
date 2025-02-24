@@ -1,7 +1,10 @@
 // Defines image drive
+/** Internal handler for persistent memory */
 export class ImageDrive {
 	// Declares fields
+	/** Indexed database object */
 	readonly database: IDBDatabase;
+	/** Identification string */
 	readonly reference: string;
 
 	// Constructs image drive
@@ -11,7 +14,7 @@ export class ImageDrive {
 		this.reference = reference;
 	}
 
-	// Clears database
+	/** Clears database */
 	async clear(): Promise<void> {
 		// Clears store
 		await this.transact((store: IDBObjectStore) => {
@@ -19,15 +22,15 @@ export class ImageDrive {
 		}, "readwrite");
 	}
 	
-	// Deletes key from database
-	async deleteOne(key: string): Promise<void> {
+	/** Deletes key from database */
+	async delete(key: string): Promise<void> {
 		// Deletes key from store
 		await this.transact((store: IDBObjectStore) => {
 			store.delete(key);
 		}, "readwrite");
 	}
 	
-	// Deletes multiple keys from database
+	/** Deletes multiple keys from database */
 	async deleteBulk(keys: string[]): Promise<void> {
 		// Deletes multiple keys from store
 		await this.transact((store: IDBObjectStore) => {
@@ -35,7 +38,16 @@ export class ImageDrive {
 		}, "readwrite");
 	}
 
-	// Retrieves all keys from database
+	/** Deletes database */
+	static drop(reference: string): Promise<void> {
+		// Deletes database
+		return new Promise((resolve) => {
+			const request = indexedDB.deleteDatabase(reference);
+			request.onsuccess = () => resolve();
+		});
+	}
+
+	/** Retrieves all keys from database */
 	async fetchKeys(): Promise<string[]> {
 		// Retrieves keys from store
 		let keys: string[] = [];
@@ -48,7 +60,7 @@ export class ImageDrive {
 		return keys;
 	}
 
-	// Retrieves all pairs from database
+	/** Retrieves all pairs from database */
 	async fetchTable(): Promise<{ [ key: string ]: unknown }> {
 		// Retrieves pairs from store
 		const table: { [ key: string ]: unknown } = {};
@@ -68,7 +80,7 @@ export class ImageDrive {
 		return table;
 	}
 
-	// Retrieves all values from database
+	/** Retrieves all values from database */
 	async fetchValues(): Promise<unknown[]> {
 		// Retrieves values from store
 		let values: unknown[] = [];
@@ -81,8 +93,8 @@ export class ImageDrive {
 		return values;
 	}
 
-	// Detects whether key exists in database
-	async probeOne(key: string): Promise<boolean> {
+	/** Detects whether key exists in database */
+	async probe(key: string): Promise<boolean> {
 		// Probes key in store
 		let probed: boolean = false;
 		await this.transact((store: IDBObjectStore) => {
@@ -94,7 +106,7 @@ export class ImageDrive {
 		return probed;
 	}
 
-	// Detects whether multiple keys exists in database
+	/** Detects whether multiple keys exists in database */
 	async probeBulk(keys: string[]): Promise<{ [ key: string ]: boolean }> {
 		// Probes key in store
 		const table: { [ key: string ]: boolean } = {};
@@ -112,8 +124,8 @@ export class ImageDrive {
 		return table;
 	}
 
-	// Retrieves value from database
-	async readOne(key: string): Promise<unknown> {
+	/** Retrieves value from database */
+	async read(key: string): Promise<unknown> {
 		// Retrieves value from store
 		let value: unknown = void 0;
 		await this.transact((store: IDBObjectStore) => {
@@ -125,7 +137,7 @@ export class ImageDrive {
 		return value;
 	}
 
-	// Retrieves multiple values from database
+	/** Retrieves multiple values from database */
 	async readBulk(keys: string[]): Promise<{ [ key: string ]: unknown }> {
 		// Retrieves values from store
 		const table: { [ key: string ]: unknown } = {};
@@ -143,7 +155,7 @@ export class ImageDrive {
 		return table;
 	}
 	
-	// Requests image drive
+	/** Requests image drive */
 	static request(reference: string): Promise<ImageDrive> {
 		// Returns image drive
 		return new Promise((resolve) => {
@@ -159,7 +171,7 @@ export class ImageDrive {
 		});
 	}
 
-	// Creates transaction
+	/** Creates transaction */
 	transact(payload: (store: IDBObjectStore) => void, mode: "readonly" | "readwrite"): Promise<void> {
 		// Creates transaction
 		return new Promise((resolve) => {
@@ -169,24 +181,15 @@ export class ImageDrive {
 		});
 	}
 
-	// Deletes database
-	static wipe(reference: string): Promise<void> {
-		// Deletes database
-		return new Promise((resolve) => {
-			const request = indexedDB.deleteDatabase(reference);
-			request.onsuccess = () => resolve();
-		});
-	}
-
-	// Updates value in database
-	async writeOne(key: string, value: unknown): Promise<void> {
+	/** Updates value in database */
+	async write(key: string, value: unknown): Promise<void> {
 		// Updates value in store
 		await this.transact((store: IDBObjectStore) => {
 			store.put(value, key)
 		}, "readwrite");
 	}
 
-	// Updates multiple values in database
+	/** Updates multiple values in database */
 	async writeBulk(table: { [ key: string ]: unknown }): Promise<void> {
 		// Updates values in store
 		await this.transact((store: IDBObjectStore) => {

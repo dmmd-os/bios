@@ -1,6 +1,8 @@
 // Defines image events
+/** Internal handler for event listeners */
 export class ImageEvents {
 	// Declares fields
+	/** Event listeners */
 	readonly listeners: { [ event: string ]: ((...parameters: unknown[]) => (void | Promise<void>))[] };
 
 	// Constructs image events
@@ -9,7 +11,7 @@ export class ImageEvents {
 		this.listeners = {};
 	}
 
-	// Emits an event
+	/** Emits an event */
 	emit(event: string, ...parameters: unknown[]): void {
 		// Blocks empty event
 		if(!(event in this.listeners)) return;
@@ -19,7 +21,7 @@ export class ImageEvents {
 		for(let i = 0; i < listeners.length; i++) listeners[i](...parameters);
 	}
 
-	// Removes all same-reference listeners
+	/** Removes all same-reference listeners */
 	off(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Blocks empty event
 		if(!(event in this.listeners)) return;
@@ -34,7 +36,7 @@ export class ImageEvents {
 		if(listeners.length === 0) delete this.listeners[event];
 	}
 
-	// Appends an listener
+	/** Appends an listener */
 	on(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Creates new event
 		if(!(event in this.listeners)) this.listeners[event] = [];
@@ -43,7 +45,7 @@ export class ImageEvents {
 		this.listeners[event].push(listener);
 	}
 
-	// Appends an one-time listener
+	/** Appends an one-time listener */
 	once(event: string, listener: (...parameters: unknown[]) => (void | Promise<void>)): void {
 		// Defines wrapper
 		const wrapper = () => {

@@ -1,5 +1,5 @@
 // Imports
-import ImageDrive from "./image_drive";
+import ImageDrive from "../image-drive";
 
 // Defines image os
 export class ImageOs {

@@ -2,17 +2,7 @@
 import ImageCommand from "./image_command";
 import ImageStdio from "./image_stdio";
 
-// Defines interface
-export interface ImageTerminalFrame {
-	readonly container: HTMLDivElement;
-	readonly cursor: HTMLDivElement;
-	readonly highlight: HTMLDivElement;
-	readonly stdin: HTMLDivElement;
-	readonly stdout: HTMLDivElement;
-	readonly text: HTMLDivElement;
-}
-
-// Defines image console
+// Defines image terminal
 export class ImageTerminal {
 	// Declares fields
 	private _anchor: number;
@@ -22,11 +12,18 @@ export class ImageTerminal {
 	private _history: Set<string>;
 	private _timeline: readonly string[] | null;
 	readonly commands: Set<ImageCommand>;
-	readonly frame: ImageTerminalFrame;
+	readonly frame: {
+		readonly cursor: HTMLDivElement;
+		readonly highlight: HTMLDivElement;
+		readonly stdin: HTMLDivElement;
+		readonly stdio: HTMLDivElement;
+		readonly stdout: HTMLDivElement;
+		readonly text: HTMLDivElement;
+	};
 	readonly stdin: ImageStdio;
 	readonly stdout: ImageStdio;
 
-	// Constructs image console
+	// Constructs image terminal
 	constructor() {
 		// Initializes fields
 		this._anchor = 0;
@@ -37,7 +34,7 @@ export class ImageTerminal {
 		this._timeline = [];
 		this.commands = new Set();
 		this.frame = {
-			container: document.createElement("div"),
+			stdio: document.createElement("div"),
 			cursor: document.createElement("div"),
 			highlight: document.createElement("div"),
 			stdin: document.createElement("div"),
@@ -48,22 +45,20 @@ export class ImageTerminal {
 		this.stdout = new ImageStdio();
 
 		// Initializes frame
-		this.frame.container.classList.add("image-terminal");
 		this.frame.cursor.classList.add("image-terminal-cursor");
 		this.frame.highlight.classList.add("image-terminal-highlight");
 		this.frame.stdin.classList.add("image-terminal-stdin");
+		this.frame.stdio.classList.add("image-terminal");
 		this.frame.stdout.classList.add("image-terminal-stdout");
 		this.frame.text.classList.add("image-terminal-text");	
 		this.frame.stdin.appendChild(this.frame.text);
 		this.frame.stdin.appendChild(this.frame.highlight);
 		this.frame.stdin.appendChild(this.frame.cursor);
-		this.frame.container.appendChild(this.frame.stdout);
-		this.frame.container.appendChild(this.frame.stdin);
+		this.frame.stdio.appendChild(this.frame.stdout);
+		this.frame.stdio.appendChild(this.frame.stdin);
 
 		// Renders
 		this.render();
-
-		this.print("terminal work in progress... new line doesnt work rn");
 	}
 
 	// Retrieves anchor
@@ -164,13 +159,13 @@ export class ImageTerminal {
 	}
 
 	// Executes command
+	// @incomplete
 	async execute(content: string): Promise<void> {
-
 	}
 
 	// Handles key press
 	async key(key: KeyboardEvent): Promise<void> {
-		// Prevents alt or meta keys
+		// Handles alt or meta keys
 		if(key.altKey || key.metaKey) return;
 
 		// Handles escape key
@@ -178,29 +173,38 @@ export class ImageTerminal {
 
 		// Handles backspace keys
 		else if(key.key === "Backspace" || key.key === "Delete") {
-			if(this._anchor === this._cursor) this.stepCursor(key.key === "Backspace" ? -1 : 1, true);
-			this.enter("");
+			if(this._anchor === this._cursor) this.moveCursor(this._cursor + key.key === "Backspace" ? -1 : 1, true);
+			await this.enter("");
 		}
 
 		// Handles enter key
 		else if(key.key === "Enter") {
 			this._anchor = this._cursor;
-			this.enter("\n");
+			await this.enter("\n");
 		}
 
 		// Handles arrow keys
-		else if(key.key === "ArrowLeft" || key.key === "ArrowRight") this.stepCursor(key.key === "ArrowLeft" ? -1 : 1, key.shiftKey);
-		else if((key.key === "ArrowUp" || key.key === "ArrowDown") && !key.ctrlKey) this.stepChrono(key.key === "ArrowUp" ? -1 : 1);
+		else if(key.key === "ArrowLeft" || key.key === "ArrowRight") this.moveCursor(this._cursor + key.key === "ArrowLeft" ? -1 : 1, key.shiftKey);
+		else if(key.key === "ArrowUp" || key.key === "ArrowDown") this.moveChrono(this._chrono + key.key === "ArrowUp" ? -1 : 1);
 
 		// Handles control keys
 		else if(key.ctrlKey) {
-			if(key.key === "a" || key.key === "A") this.rangeCursor(this.stdin.buffer.length, 0);
+			if(key.key === "a" || key.key === "A") this.rangeCursor(this.stdin.buffer.length);
 			else if(key.key === "C") await this.copy();
 			else if(key.key === "V") await this.paste();
 		}
 
 		// Handles key
-		else if(key.key.length === 1) this.enter(key.key);
+		else if(key.key.length === 1) await this.enter(key.key);
+	}
+	
+	// Moves anchor
+	moveAnchor(anchor: number): void {
+		// Updates anchor
+		this.anchor = anchor;
+
+		// Renders
+		this.render();
 	}
 	
 	// Moves chrono
@@ -229,39 +233,39 @@ export class ImageTerminal {
 	}
 
 	// Prints content to stdout
-	print(content: unknown): void {
+	print(content: unknown, end: string = "\n"): void {
 		// Updates stdout
-		this.stdout.write(String(content) + "\n");
+		this.stdout.write(String(content) + end);
 
 		// Renders
 		this.render();
 	}
 
 	// Puts a character into stdin
+	// @incomplete
 	private async _put(character: string): Promise<void> {
-		// Checks for incomplete pairs
-		let complete = true;
-		if(this._complex) {
-
-		}
-
-		// Handles new lines
-		if(character === "\n" && complete) {
-			this.print(this.stdin.buffer);
-			this.escape();
-			return;
-		}
-
 		// Updates stdin
 		this.stdin.write(character, this._cursor, this._anchor);
 
 		// Updates cursor
 		this._cursor = Math.min(this._cursor, this._anchor) + character.length;
 		this._anchor = this._cursor;
+
+		// Checks for incomplete pairs
+		let complete = true;
+		if(this._complex) {
+			// TODO: CHECK FOR INCOMPLETE PAIRS
+		}
+		
+		// Handles new lines
+		if(character === "\n" && complete) {
+			this.print(this.stdin.buffer);
+			this.escape();
+		}
 	}
 
 	// Creates a range
-	rangeCursor(cursor: number, anchor: number): void {
+	rangeCursor(cursor: number, anchor: number = 0): void {
 		// Updates cursor
 		this.cursor = cursor;
 		this.anchor = anchor;
@@ -281,18 +285,6 @@ export class ImageTerminal {
 		this.frame.highlight.setAttribute("data-highlight", filler.slice(base, base + range));
 		this.frame.text.innerText = "> " + this.stdin.buffer;
 		this.frame.stdout.innerText = this.stdout.buffer;
-	}
-
-	// Steps chrono in specified direction
-	stepChrono(direction: -1 | 1): void {
-		// Updates cursor
-		this.moveChrono(this._cursor + direction);
-	}
-
-	// Steps cursor in specified direction
-	stepCursor(direction: -1 | 1, shift: boolean = false): void {
-		// Updates cursor
-		this.moveCursor(this._cursor + direction, shift);
 	}
 
 	// Retrieves timeline
