@@ -1,11 +1,11 @@
-// Defines image events
-/** Internal handler for event listeners */
-export class ImageEvents {
+// Defines emitter
+/** Internal handler for events emitter */
+export class Emitter {
 	// Declares fields
 	/** Event listeners */
 	readonly listeners: { [ event: string ]: ((...parameters: unknown[]) => (void | Promise<void>))[] };
 
-	// Constructs image events
+	// Constructs emitter
 	constructor() {
 		// Initializes fields
 		this.listeners = {};
@@ -59,4 +59,4 @@ export class ImageEvents {
 }
 
 // Exports
-export default ImageEvents;
+export default Emitter;

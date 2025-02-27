@@ -1,6 +1,6 @@
 // Imports
 import ImageDrive from "./image-drive";
-import ImageEvents from "./image-events";
+import Emitter from "../emitter";
 import ImageTerminal from "./image-terminal";
 
 // Defines image bios
@@ -10,7 +10,7 @@ export class ImageBios {
 	/** Booter drive */
 	readonly drive: ImageDrive;
 	/** Event listeners */
-	readonly events: ImageEvents;
+	readonly events: Emitter;
 	/** Booter terminal */
 	readonly terminal: ImageTerminal;
 
@@ -18,7 +18,7 @@ export class ImageBios {
 	constructor(drive: ImageDrive) {
 		// Initializes fields
 		this.drive = drive;
-		this.events = new ImageEvents();
+		this.events = new Emitter();
 		this.terminal = new ImageTerminal();
 
 		// Handles keypress

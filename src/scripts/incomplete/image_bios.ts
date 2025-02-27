@@ -1,5 +1,5 @@
 // Imports
-import ImageDrive from "../image-drive";
+import ImageDrive from "../old/image-drive";
 import ImageOs from "./image_os";
 import ImageTerminal from "./image_terminal";
 

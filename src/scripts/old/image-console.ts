@@ -1,13 +1,14 @@
 // Imports
-import ImageEvents from "./image-events";
+import Emitter from "../emitter";
 import ImageStdio from "./image-stdio";
+import ImageStream from "./image-stream";
 
 // Defines image console
 /** Internal handler for console interface */
 export class ImageConsole {
 	// Declares fields
 	/** Event listeners */
-	readonly events: ImageEvents;
+	readonly events: Emitter;
 	/** Standard input system */
 	readonly stdin: ImageStdio;
 	/** Standard output system */
@@ -16,7 +17,7 @@ export class ImageConsole {
 	// Constructs image console
 	constructor() {
 		// Initializes fields
-		this.events = new ImageEvents();
+		this.events = new Emitter();
 		this.stdin = new ImageStdio();
 		this.stdout = new ImageStdio();
 	}
@@ -68,8 +69,18 @@ export class ImageConsole {
 	}
 
 	/** Enters content to stdin */
-	async enter(content: string): Promise<void> {
-		this.stdin.write(content);
+	enter(content: string): void {
+		// Enters and handles input
+		const chunk = ImageStream.purify(content);
+		for(let i = 0; i < chunk.length; i++) {
+			const character = chunk[i];
+			this.stdin.write(character, false);
+			if(character === "\n") {
+				const line = this.stdin.read("\n");
+				this.print(line, "");
+				this.events.emit("line", line);
+			}
+		}
 
 		// Emits event
 		this.events.emit("updateStdin");

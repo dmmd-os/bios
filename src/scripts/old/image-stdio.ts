@@ -85,7 +85,7 @@ export class ImageStdio {
 	}
 
 	/** Reads content */
-	read(delimiter: string | null, maximum: null): string;
+	read(delimiter: string | null, maximum?: null): string;
 	read(delimiter: string | null, maximum: number): string[];
 	read(delimiter: string | null, maximum: number | null = null): string | string[] {
 		return maximum === null ? this._stream.read(delimiter) : this._stream.readBulk(delimiter, maximum);

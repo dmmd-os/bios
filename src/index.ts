@@ -2,8 +2,8 @@
 
 // Imports
 // @ts-ignore
-import ImageBios from "./scripts/image-bios";
-import ImageTerminal from "./scripts/image-terminal";
+import ImageBios from "./scripts/old/image-bios";
+import ImageTerminal from "./scripts/old/image-terminal";
 import "./styles/image-os.css";
 // @ts-ignore
 import "./styles/image-terminal.css";
