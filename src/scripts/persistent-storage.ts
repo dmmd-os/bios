@@ -1,5 +1,5 @@
 // Defines persistent storage class
-/** Internal handler for persistent storage */
+/** Data storage in a permanent database */
 export class PersistentStorage {
 	// Declares fields
 	/** Indexed database object */

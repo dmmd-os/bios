@@ -65,6 +65,12 @@ export class ArraySet<Type> {
 		return this._set;
 	}
 
+	/** Retrieves the array set size */
+	size(): number {
+		// Returns size
+		return this._set.size();
+	}
+
 	/** Adds element to array set */
 	write(element: Type): void {
 		// Updates set
