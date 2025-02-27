@@ -1,12 +1,12 @@
-import Emitter from "./emitter";
+import EventEmitter from "../event-emitter";
 
 export class StringFlow {
 	private _buffer: string;
-	readonly emitter: Emitter;
+	readonly emitter: EventEmitter;
 
 	constructor() {
 		this._buffer = "";
-		this.emitter = new Emitter();
+		this.emitter = new EventEmitter();
 	}
 
 	get buffer() {

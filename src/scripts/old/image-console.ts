@@ -1,5 +1,5 @@
 // Imports
-import Emitter from "../emitter";
+import EventEmitter from "../event-emitter";
 import ImageStdio from "./image-stdio";
 import ImageStream from "./image-stream";
 
@@ -8,7 +8,7 @@ import ImageStream from "./image-stream";
 export class ImageConsole {
 	// Declares fields
 	/** Event listeners */
-	readonly events: Emitter;
+	readonly events: EventEmitter;
 	/** Standard input system */
 	readonly stdin: ImageStdio;
 	/** Standard output system */
@@ -17,7 +17,7 @@ export class ImageConsole {
 	// Constructs image console
 	constructor() {
 		// Initializes fields
-		this.events = new Emitter();
+		this.events = new EventEmitter();
 		this.stdin = new ImageStdio();
 		this.stdout = new ImageStdio();
 	}

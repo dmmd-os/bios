@@ -1,5 +1,5 @@
 // Imports
-import ImageDrive from "../old/image-drive";
+import PersistentStorage from "../persistent-storage";
 import ImageOs from "./image_os";
 import ImageTerminal from "./image_terminal";
 
@@ -7,12 +7,12 @@ import ImageTerminal from "./image_terminal";
 export class ImageBios {
 	// Declares fields
 	private _os: ImageOs | null;
-	readonly drive: ImageDrive;
+	readonly drive: PersistentStorage;
 	readonly reference: string;
 	readonly terminal: ImageTerminal;
 
 	// Constructs image bios
-	constructor(reference: string, drive: ImageDrive) {
+	constructor(reference: string, drive: PersistentStorage) {
 		// Initializes fields
 		this._os = null;
 		this.drive = drive;
@@ -45,7 +45,7 @@ export class ImageBios {
 	static async request(): Promise<ImageBios> {
 		// Initializes image bios
 		const reference = "@os:__bios__";
-		const drive = await ImageDrive.request(reference);
+		const drive = await PersistentStorage.request(reference);
 
 		// Returns image bios
 		return new ImageBios(reference, drive);

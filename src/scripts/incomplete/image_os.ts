@@ -1,16 +1,16 @@
 // Imports
-import ImageDrive from "../old/image-drive";
+import PersistentStorage from "../persistent-storage";
 
 // Defines image os
 export class ImageOs {
 	// Declares fields
-	readonly drive: ImageDrive;
+	readonly drive: PersistentStorage;
 	readonly frame: HTMLIFrameElement;
 	readonly reference: string;
 	readonly source: string;
 
 	// Constructs image os
-	constructor(reference: string, source: string, drive: ImageDrive) {
+	constructor(reference: string, source: string, drive: PersistentStorage) {
 		// Initializes fields
 		this.drive = drive;
 		this.frame = document.createElement("iframe");
@@ -25,7 +25,7 @@ export class ImageOs {
 	// Requests image os
 	static async request(reference: string, source: string): Promise<ImageOs> {
 		// Initializes image os
-		const drive = await ImageDrive.request(reference);
+		const drive = await PersistentStorage.request(reference);
 
 		// Returns image os
 		return new ImageOs(reference, source, drive);

@@ -1,6 +1,6 @@
 // Imports
-import ImageDrive from "./image-drive";
-import Emitter from "../emitter";
+import PersistentStorage from "../persistent-storage";
+import EventEmitter from "../event-emitter";
 import ImageTerminal from "./image-terminal";
 
 // Defines image bios
@@ -8,17 +8,17 @@ import ImageTerminal from "./image-terminal";
 export class ImageBios {
 	// Declares fields
 	/** Booter drive */
-	readonly drive: ImageDrive;
+	readonly drive: PersistentStorage;
 	/** Event listeners */
-	readonly events: Emitter;
+	readonly events: EventEmitter;
 	/** Booter terminal */
 	readonly terminal: ImageTerminal;
 
 	// Constructs image bios
-	constructor(drive: ImageDrive) {
+	constructor(drive: PersistentStorage) {
 		// Initializes fields
 		this.drive = drive;
-		this.events = new Emitter();
+		this.events = new EventEmitter();
 		this.terminal = new ImageTerminal();
 
 		// Handles keypress
@@ -32,7 +32,7 @@ export class ImageBios {
 	/** Requests image bios */
 	static async request(): Promise<ImageBios> {
 		// Initializes image drive
-		const drive = await ImageDrive.request("@os.dmmd:__bios__");
+		const drive = await PersistentStorage.request("@os.dmmd:__bios__");
 
 		// Returns image bios
 		return new ImageBios(drive);

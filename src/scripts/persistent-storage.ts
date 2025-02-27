@@ -1,14 +1,14 @@
-// Defines image drive
-/** Internal handler for persistent memory */
-export class ImageDrive {
+// Defines persistent storage class
+/** Internal handler for persistent storage */
+export class PersistentStorage {
 	// Declares fields
 	/** Indexed database object */
 	readonly database: IDBDatabase;
 	/** Identification string */
 	readonly reference: string;
 
-	// Constructs image drive
-	constructor(reference: string, database: IDBDatabase) {
+	// Constructs persistent storage
+	private constructor(reference: string, database: IDBDatabase) {
 		// Initializes fields
 		this.database = database;
 		this.reference = reference;
@@ -92,6 +92,22 @@ export class ImageDrive {
 		// Returns valuess
 		return values;
 	}
+	
+	/** Asynchronously instantiates persistent storage */
+	static instantiate(reference: string): Promise<PersistentStorage> {
+		// Returns image drive
+		return new Promise((resolve) => {
+			// Opens database
+			const request = indexedDB.open(reference);
+
+			// Initializes database
+			request.onupgradeneeded = () => request.result.createObjectStore("data");
+			request.onsuccess = () => {
+				request.result.onversionchange = () => request.result.close();
+				resolve(new PersistentStorage(reference, request.result));
+			};
+		});
+	}
 
 	/** Detects whether key exists in database */
 	async probe(key: string): Promise<boolean> {
@@ -154,22 +170,6 @@ export class ImageDrive {
 		// Returns value table
 		return table;
 	}
-	
-	/** Requests image drive */
-	static request(reference: string): Promise<ImageDrive> {
-		// Returns image drive
-		return new Promise((resolve) => {
-			// Opens database
-			const request = indexedDB.open(reference);
-
-			// Initializes database
-			request.onupgradeneeded = () => request.result.createObjectStore("data");
-			request.onsuccess = () => {
-				request.result.onversionchange = () => request.result.close();
-				resolve(new ImageDrive(reference, request.result));
-			};
-		});
-	}
 
 	/** Creates transaction */
 	transact(payload: (store: IDBObjectStore) => void, mode: "readonly" | "readwrite"): Promise<void> {
@@ -199,4 +199,4 @@ export class ImageDrive {
 }
 
 // Exports
-export default ImageDrive;
+export default PersistentStorage;
