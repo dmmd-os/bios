@@ -4,7 +4,7 @@ export class EventEmitter {
 	// Declares fields
 	private _listeners: { [ event: string ]: ((...parameters: unknown[]) => (Promise<void> | void))[] };
 
-	// Constructs event emitter
+	// Constructs class
 	constructor() {
 		// Initializes fields
 		this._listeners = {};

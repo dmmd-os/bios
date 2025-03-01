@@ -5,7 +5,7 @@ export class ArraySet<Type> {
 	private _array: Type[] | null;
 	private _set: Set<Type>;
 
-	// Constructs array set
+	// Constructs class
 	constructor() {
 		// Initializes fields
 		this._array = null;
@@ -65,15 +65,16 @@ export class ArraySet<Type> {
 		return this._set;
 	}
 
-	/** Retrieves the array set size */
-	size(): number {
+	/** Array set size */
+	get size() {
 		// Returns size
-		return this._set.size();
+		return this._set.size;
 	}
 
 	/** Adds element to array set */
-	write(element: Type): void {
+	write(element: Type, bump: boolean = false): void {
 		// Updates set
+		if(bump) this._set.delete(element);
 		this._set.add(element);
 
 		// Invalidates array

@@ -7,7 +7,7 @@ export class PersistentStorage {
 	/** Identification string */
 	readonly reference: string;
 
-	// Constructs persistent storage
+	// Constructs class
 	private constructor(reference: string, database: IDBDatabase) {
 		// Initializes fields
 		this.database = database;
