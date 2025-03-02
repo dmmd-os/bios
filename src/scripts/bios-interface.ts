@@ -1,4 +1,6 @@
 // Imports
+import { shellTexts } from "../../core/client-constants";
+import BiosCommand from "./bios-command";
 import BiosConsole from "./bios-console";
 import BiosTerminal from "./bios-terminal";
 import EventEmitter from "./event-emitter";
@@ -6,11 +8,12 @@ import PersistentStorage from "./persistent-storage";
 import ShiftQueue from "./shift-queue";
 
 // Defines bios interface class
-/** Central logic for BIOS */
+/** Central logic for bios */
 export class BiosInterface {
 	// Declares fields
 	private _busy: Promise<void> | null;
 	private _chores: ShiftQueue<() => Promise<void>>;
+	private _commands: Map<string, BiosCommand>;
 	private _os: null;
 	/** Bios console */
 	readonly console: BiosConsole;
@@ -26,13 +29,14 @@ export class BiosInterface {
 		// Initializes fields
 		this._busy = null;
 		this._chores = new ShiftQueue();
+		this._commands = new Map();
 		this._os = null;
 		this.console = new BiosConsole();
 		this.emitter = new EventEmitter();
 		this.storage = storage;
 		this.terminal = new BiosTerminal(this.console);
 
-		// Initializes keyboard
+		// Handle keyboard event
 		const handleKey: (key: KeyboardEvent) => Promise<boolean> = async (key: KeyboardEvent) => {
 			// Handles alt or meta keys
 			if(key.altKey || key.metaKey) return false;
@@ -123,6 +127,27 @@ export class BiosInterface {
 				key.stopPropagation();
 			}
 		});
+
+		// Handles console event
+		this.console.emitter.on("line", (line: string) => this.shell(line));
+	}
+
+	/** Current working chore */
+	get busy() {
+		// Returns busy
+		return this._busy;
+	}
+
+	/** Chore queue */
+	get chores() {
+		// Returns queue
+		return this._chores.queue;
+	}
+
+	/** Registered commands */
+	get commands(): ReadonlyMap<string, BiosCommand> {
+		// Returns commands
+		return this._commands;
 	}
 
 	/** Creates a new chore */
@@ -165,8 +190,77 @@ export class BiosInterface {
 		this._os = os;
 	}
 
-	shell(content: string): void {
+	/** Registers command */
+	register(command: BiosCommand): void {
+		// Registers command
+		for(let i = 0; i < command.aliases.length; i++) this._commands.set(command.aliases[i], command);
+	}
 
+	/** Executes command */
+	shell(content: string): void {
+		// Parses content
+		if(content.trim().length === 0) return;
+		const raw = content;
+		const vector = raw.trim().replace(/\s{2,}/g, " ").split(" ");
+		
+		// Probes command
+		const alias = vector[0];
+		if(!this._commands.has(alias)) {
+			this.console.print(shellTexts.COMMAND_NOT_FOUND.replace(/%ALIAS%/g, alias));
+			return;
+		}
+		const command = this._commands.get(alias)!;
+
+		// Parses flags
+		const flags: Map<string, string[]> = new Map();
+		let flag: string[] = [];
+		flags.set("", flag);
+		for(let i = 1; i < vector.length; i++) {
+			// Initializes parsing
+			const parameter = vector[i];
+
+			// Handles self-enclosed flag
+			if(/^-.*?=(?:.*?,?)*$/.test(parameter)) {
+				// Parses parameter
+				const index = parameter.indexOf("=");
+				const key = parameter.slice(1, index);
+				const values = parameter.slice(index + 1).split(",");
+
+				// Appends flag
+				flag = values;
+				flags.set(key, flag);
+			}
+
+			// Handles regular flag
+			else if(/^-.*$/.test(parameter)) {
+				// Parses parameter
+				const key = parameter.slice(1);
+
+				// Appends flag
+				flag = [];
+				flags.set(key, flag);
+			}
+
+			// Handles parameter
+			else {
+				// Appends parameter
+				flag.push(parameter);
+			}
+		}
+
+		// Runs command
+		this.chore([
+			(reference) => command.callback(flags, vector, raw, reference)
+		]);
+	}
+
+	/** Unregisters command */
+	unregister(command: BiosCommand): void {
+		// Unregisters command
+		for(let i = 0; i < command.aliases.length; i++) {
+			const alias = command.aliases[i];
+			if(this._commands.get(alias) === command) this._commands.delete(alias);
+		}
 	}
 }
 

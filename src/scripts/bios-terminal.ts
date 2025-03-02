@@ -2,7 +2,7 @@
 import BiosConsole from "./bios-console";
 
 // Defines bios terminal class
-/** Console display for BIOS */
+/** Console display for bios */
 export class BiosTerminal {
 	// Declares fields
 	private _cursorOverlay: HTMLDivElement;
@@ -43,7 +43,7 @@ export class BiosTerminal {
 		this.frame.appendChild(this._stdoutFrame);
 		this.frame.appendChild(this._stdinFrame);
 
-		// Binds console
+		// Handle console events
 		this.console.emitter.on("updateStdin", () => this.renderStdin());
 		this.console.emitter.on("updateStdout", () => this.renderStdout());
 
@@ -61,6 +61,7 @@ export class BiosTerminal {
 	/** Renders standard input system frame */
 	renderStdin(): void {
 		// Initializes render
+		const arrow = this.console.arrow;
 		const anchor = this.console.anchor;
 		const buffer = this.console.buffer;
 		const cursor = this.console.cursor;
@@ -68,16 +69,22 @@ export class BiosTerminal {
 		const range = Math.abs(cursor - anchor);
 
 		// Updates frame
-		this._cursorOverlay.innerText = this.console.mode === "insert" ? (" ".repeat(cursor + 2) + "_") : "";
-		this._highlightOverlay.innerText = " ".repeat(front + 2);
+		this._cursorOverlay.innerText = this.console.mode === "insert" ? (" ".repeat(cursor + arrow.length) + "_") : "";
+		this._highlightOverlay.innerText = " ".repeat(front + arrow.length);
 		this._highlightOverlay.setAttribute("data-highlight", " ".repeat(Math.max(range, this.console.mode === "insert" ? 0 : 1)));
-		this._textOverlay.innerText = "> " + buffer;
+		this._textOverlay.innerText = arrow + buffer;
+
+		// Bumps frame
+		this.frame.scrollTop = this.frame.scrollHeight;
 	}
 
 	/** Renders standard output system frame */
 	renderStdout(): void {
 		// Updates frame
 		this._stdoutFrame.innerText = this.console.stdout.buffer;
+
+		// Bumps frame
+		this.frame.scrollTop = this.frame.scrollHeight;
 	}
 }
 

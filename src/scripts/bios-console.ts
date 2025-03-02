@@ -3,7 +3,7 @@ import ArraySet from "./array-set";
 import EventEmitter from "./event-emitter";
 
 // Defines bios stdin class
-/** Standard input system for BIOS console */
+/** Standard input system for bios console */
 export class BiosStdin {
 	// Declares fields
 	private _anchor: number;
@@ -91,10 +91,16 @@ export class BiosStdin {
 		if(cache != this._cursor) this.emitter.emit("updateCursor");
 	}
 
+	/** History of past inputs */
+	get history(): readonly string[] {
+		// Returns history array
+		return this._history.array;
+	}
+
 	/** Removes content in specified direction and length */
-	delete(direction: number): void {
+	delete(length: number): void {
 		// Updates cursor
-		if(this._anchor === this._cursor) this.cursor += direction;
+		if(this._anchor === this._cursor) this.cursor += length;
 		
 		// Updates buffer
 		this.write("");
@@ -135,8 +141,8 @@ export class BiosStdin {
 		// Reads buffer
 		this.buffer = rest;
 		this.chrono = this._history.size;
-		this.anchor = front - line.length - 1;
 		this.cursor = front - line.length - 1;
+		this.anchor = front - line.length - 1;
 
 		// Returns line
 		return line;
@@ -171,8 +177,8 @@ export class BiosStdin {
 				const after = this._buffer.slice(back);
 				this.buffer = before + line + after + rest;
 				this.chrono = this._history.size;
-				this.anchor = front + line.length;
 				this.cursor = front + line.length;
+				this.anchor = front + line.length;
 				break;
 			}
 			case "overtype": {
@@ -183,21 +189,21 @@ export class BiosStdin {
 				const after = this._buffer.slice(Math.max(back, front + line.length));
 				this.buffer = before + line + after + rest;
 				this.chrono = this._history.size;
-				this.anchor = front + line.length;
 				this.cursor = front + line.length;
+				this.anchor = front + line.length;
 				break;
 			}
 			case "replace": {
 				this.buffer = buffer;
 				this.chrono = this._history.size;
-				this.anchor = buffer.length;
 				this.cursor = buffer.length;
+				this.anchor = buffer.length;
 				break;
 			}
 			case "update": {
 				this.buffer = buffer;
-				this.anchor = buffer.length;
 				this.cursor = buffer.length;
+				this.anchor = buffer.length;
 				break;
 			}
 		}
@@ -212,7 +218,7 @@ export class BiosStdin {
 }
 
 // Defines bios stdout class
-/** Standard output system for BIOS console */
+/** Standard output system for bios console */
 export class BiosStdout {
 	// Declares fields
 	private _buffer: string;
@@ -284,9 +290,10 @@ export class BiosStdout {
 }
 
 // Defines bios console class
-/** Console interface for BIOS */
+/** Console interface for bios */
 export class BiosConsole {
 	// Declares fields
+	private _arrow: string;
 	private _mode: "insert" | "overtype";
 	/** Event emitter */
 	readonly emitter: EventEmitter;
@@ -298,21 +305,26 @@ export class BiosConsole {
 	// Constructs class
 	constructor() {
 		// Initializes fields
+		this._arrow = "> ";
 		this._mode = "insert";
 		this.emitter = new EventEmitter();
 		this.stdin = new BiosStdin();
 		this.stdout = new BiosStdout();
 
-		// Emits standard input system events
+		// Handles standard input system events
 		const emitUpdateStdin = () => this.emitter.emit("updateStdin");
-		this.stdin.emitter.on("line", (line: string) => this.emitter.emit("line", line));
+		this.stdin.emitter.on("line", (line: string) => {	
+			this.print(this._arrow + line);
+			this.emitter.emit("line", line);
+		});
 		this.stdin.emitter.on("updateAnchor", emitUpdateStdin);
 		this.stdin.emitter.on("updateBuffer", emitUpdateStdin);
 		this.stdin.emitter.on("updateChrono", emitUpdateStdin);
 		this.stdin.emitter.on("updateCursor", emitUpdateStdin);
+		this.emitter.on("updateArrow", emitUpdateStdin);
 		this.emitter.on("updateMode", emitUpdateStdin);
 		
-		// Emits standard output system events
+		// Handles standard output system events
 		const emitUpdateStdout = () => this.emitter.emit("updateStdout");
 		this.stdout.emitter.on("updateBuffer", emitUpdateStdout);
 	}
@@ -321,6 +333,21 @@ export class BiosConsole {
 	get anchor() {
 		// Returns anchor
 		return this.stdin.anchor;
+	}
+
+	/** Input arrow */
+	get arrow() {
+		// Returns arrow
+		return this._arrow;
+	}
+
+	set arrow(arrow: string) {
+		// Updates arrow
+		const cache = this._arrow;
+		this._arrow = BiosConsole.purify(arrow);
+
+		// Emits event
+		if(cache !== this._arrow) this.emitter.emit("updateArrow");
 	}
 	
 	/** Buffer content */
@@ -370,6 +397,12 @@ export class BiosConsole {
 	escape(): void {
 		// Clears
 		this.stdin.clear();
+	}
+
+	/** History of past inputs */
+	get history(): readonly string[] {
+		// Returns history array
+		return this.stdin.history;
 	}
 
 	/** Writes raw content to standard input system */

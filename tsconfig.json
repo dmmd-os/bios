@@ -22,6 +22,6 @@
 	},
 	"include": [
 		"src",
-		"core/constants.ts"
+		"core/server-constants.ts"
 	]
 }

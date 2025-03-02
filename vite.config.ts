@@ -1,6 +1,6 @@
 // Imports
 import { defineConfig } from "vite";
-import { commitHash } from "./core/constants";
+import { commitHash } from "./core/server-constants";
 
 // Exports
 export default defineConfig({

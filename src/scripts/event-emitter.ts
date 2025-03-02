@@ -2,7 +2,10 @@
 /** Non-blocking event emitter */
 export class EventEmitter {
 	// Declares fields
-	private _listeners: Map<string, ((...parameters: any[]) => (Promise<void> | void))[]>;
+	private _listeners: Map<
+		string,
+		((...parameters: any[]) => (Promise<void> | void))[]
+	>;
 
 	// Constructs class
 	constructor() {
@@ -45,7 +48,10 @@ export class EventEmitter {
 	}
 
 	/** Removes all same-reference listeners */
-	off(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
+	off(
+		event: string,
+		listener: (...parameters: any[]) => (Promise<void> | void)
+	): void {
 		// Handles empty event
 		if(!this._listeners.has(event)) return;
 
@@ -60,7 +66,10 @@ export class EventEmitter {
 	}
 
 	/** Appends an listener */
-	on(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
+	on(
+		event: string,
+		listener: (...parameters: any[]) => (Promise<void> | void)
+	): void {
 		// Creates new event
 		if(!this._listeners.has(event)) this._listeners.set(event, []);
 		
@@ -69,7 +78,10 @@ export class EventEmitter {
 	}
 
 	/** Appends an one-time listener */
-	once(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
+	once(
+		event: string,
+		listener: (...parameters: any[]) => (Promise<void> | void)
+	): void {
 		// Defines wrapper
 		const wrapper = () => {
 			listener();
