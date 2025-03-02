@@ -1,5 +1,6 @@
 // Imports
-import { shellTexts } from "../../core/client-constants";
+import * as texts from "../core/texts";
+import ArraySet from "./array-set";
 import BiosCommand from "./bios-command";
 import BiosConsole from "./bios-console";
 import BiosTerminal from "./bios-terminal";
@@ -15,6 +16,7 @@ export class BiosInterface {
 	private _chores: ShiftQueue<() => Promise<void>>;
 	private _commands: Map<string, BiosCommand>;
 	private _os: null;
+	private _registry: ArraySet<BiosCommand>;
 	/** Bios console */
 	readonly console: BiosConsole;
 	/** Event emitter */
@@ -31,6 +33,7 @@ export class BiosInterface {
 		this._chores = new ShiftQueue();
 		this._commands = new Map();
 		this._os = null;
+		this._registry = new ArraySet();
 		this.console = new BiosConsole();
 		this.emitter = new EventEmitter();
 		this.storage = storage;
@@ -193,7 +196,14 @@ export class BiosInterface {
 	/** Registers command */
 	register(command: BiosCommand): void {
 		// Registers command
+		if(this._registry.probe(command)) return;
 		for(let i = 0; i < command.aliases.length; i++) this._commands.set(command.aliases[i], command);
+		this._registry.write(command);
+	}
+
+	/** Command registry */
+	get registry() {
+		return this._registry.array;
 	}
 
 	/** Executes command */
@@ -205,11 +215,11 @@ export class BiosInterface {
 		
 		// Probes command
 		const alias = vector[0];
-		if(!this._commands.has(alias)) {
-			this.console.print(shellTexts.COMMAND_NOT_FOUND.replace(/%ALIAS%/g, alias));
+		const command = this._commands.get(alias)
+		if(typeof command === "undefined") {
+			this.console.print(texts.shell.COMMAND_NOT_FOUND.replace(/%ALIAS%/g, alias));
 			return;
 		}
-		const command = this._commands.get(alias)!;
 
 		// Parses flags
 		const flags: Map<string, string[]> = new Map();
@@ -257,10 +267,12 @@ export class BiosInterface {
 	/** Unregisters command */
 	unregister(command: BiosCommand): void {
 		// Unregisters command
+		if(!this._registry.probe(command)) return;
 		for(let i = 0; i < command.aliases.length; i++) {
 			const alias = command.aliases[i];
 			if(this._commands.get(alias) === command) this._commands.delete(alias);
 		}
+		this._registry.delete(command);
 	}
 }
 

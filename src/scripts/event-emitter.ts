@@ -16,20 +16,20 @@ export class EventEmitter {
 	/** Emits an event in sequence */
 	async bubble(event: string, ...parameters: any[]): Promise<void> {
 		// Handles empty event
-		if(!this._listeners.has(event)) return;
+		const listeners = this._listeners.get(event);
+		if(typeof listeners === "undefined") return;
 
 		// Evokes listeners
-		const listeners = this._listeners.get(event)!;
 		for(let i = 0; i < listeners.length; i++) await listeners[i](...parameters);
 	}
 
 	/** Emit an event in parallel */
 	async broadcast(event: string, ...parameters: any[]): Promise<void> {
 		// Handles empty event
-		if(!this._listeners.has(event)) return;
+		const listeners = this._listeners.get(event);
+		if(typeof listeners === "undefined") return;
 
 		// Evokes listeners
-		const listeners = this._listeners.get(event)!;
 		const tasks: (Promise<void> | void)[] = [];
 		for(let i = 0; i < listeners.length; i++) tasks.push(listeners[i](...parameters));
 
@@ -40,10 +40,10 @@ export class EventEmitter {
 	/** Emit an event without awaiting for completion */
 	emit(event: string, ...parameters: any[]): void {
 		// Handles empty event
-		if(!this._listeners.has(event)) return;
+		const listeners = this._listeners.get(event);
+		if(typeof listeners === "undefined") return;
 
 		// Evokes listeners
-		const listeners = this._listeners.get(event)!;
 		for(let i = 0; i < listeners.length; i++) listeners[i](...parameters);
 	}
 
@@ -53,10 +53,10 @@ export class EventEmitter {
 		listener: (...parameters: any[]) => (Promise<void> | void)
 	): void {
 		// Handles empty event
-		if(!this._listeners.has(event)) return;
+		const listeners = this._listeners.get(event);
+		if(typeof listeners === "undefined") return;
 
 		// Removes listeners
-		const listeners = this._listeners.get(event)!;
 		for(let i = listeners.length; i >= 0; i--) {
 			if(listeners[i] === listener) listeners.splice(i, 1);
 		}
