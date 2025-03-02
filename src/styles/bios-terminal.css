@@ -1,5 +1,5 @@
-/* Image terminal */
-.image-terminal {
+/* Bios terminal */
+.bios-terminal {
 	background-color: #000000;
 	color: #ffffff;
 	font-family: "Free Pixel";
@@ -13,28 +13,28 @@
 	word-break: break-all;
 }
 
-/* Image terminal stdin */
-.image-terminal-stdin {
+/* Bios terminal stdin */
+.bios-terminal-stdin {
 	position: relative;
 }
 
-.image-terminal-cursor,
-.image-terminal-highlight,
-.image-terminal-text {
+.bios-terminal-cursor,
+.bios-terminal-highlight,
+.bios-terminal-text {
 	position: absolute;
 }
 
-.image-terminal-cursor,
-.image-terminal-highlight {
+.bios-terminal-cursor,
+.bios-terminal-highlight {
 	pointer-events: none;
 	user-select: none;
 }
 
-.image-terminal-cursor {
+.bios-terminal-cursor {
 	top: 3px;
 }
 
-.image-terminal-highlight::after {
+.bios-terminal-highlight::after {
 	background-color: #ffffff8f;
 	content: attr(data-highlight);
 }

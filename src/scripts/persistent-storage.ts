@@ -93,7 +93,7 @@ export class PersistentStorage {
 		return values;
 	}
 	
-	/** Asynchronously instantiates persistent storage */
+	/** Instantiates persistent storage asynchronously */
 	static instantiate(reference: string): Promise<PersistentStorage> {
 		// Returns image drive
 		return new Promise((resolve) => {

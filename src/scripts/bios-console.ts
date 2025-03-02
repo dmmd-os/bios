@@ -11,7 +11,7 @@ export class BiosStdin {
 	private _chrono: number;
 	private _cursor: number;
 	private _history: ArraySet<string>;
-	/** Internal event emitter */
+	/** Event emitter */
 	readonly emitter: EventEmitter;
 
 	// Constructs class
@@ -72,7 +72,7 @@ export class BiosStdin {
 
 	/** Clears standard input system */
 	clear(): void {
-		// Updates buffer
+		// Writes buffer
 		this.write("", "replace");
 	}
 
@@ -89,6 +89,15 @@ export class BiosStdin {
 
 		// Emits event
 		if(cache != this._cursor) this.emitter.emit("updateCursor");
+	}
+
+	/** Removes content in specified direction and length */
+	delete(direction: number): void {
+		// Updates cursor
+		if(this._anchor === this._cursor) this.cursor += direction;
+		
+		// Updates buffer
+		this.write("");
 	}
 
 	/** Moves cursor to specified position */
@@ -116,14 +125,18 @@ export class BiosStdin {
 		if(index === -1) return null;
 
 		// Initializes read
-		const line = this._buffer.slice(0, index + 1);
+		const front = this._cursor;
+		const line = this._buffer.slice(0, index);
 		const rest = this._buffer.slice(index + 1);
 
+		// Remembers line
+		if(line.trim().length !== 0) this._history.write(line, true);
+		
 		// Reads buffer
-		this._history.write(line, true);
 		this.buffer = rest;
 		this.chrono = this._history.size;
-		this.move(this._cursor - line.length);
+		this.anchor = front - line.length - 1;
+		this.cursor = front - line.length - 1;
 
 		// Returns line
 		return line;
@@ -138,7 +151,7 @@ export class BiosStdin {
 		// Updates buffer
 		if(cache != this._chrono) this.write(this._history.read(this._chrono) ?? "", "update");
 	}
-
+	
 	/** Writes to standard input system */
 	write(
 		buffer: string,
@@ -151,43 +164,50 @@ export class BiosStdin {
 		// Writes buffer
 		switch(mode) {
 			case "insert": {
+				const index = buffer.indexOf("\n");
+				const line = index === -1 ? buffer : buffer.slice(0, index);
+				const rest = index === -1 ? "" : buffer.slice(index);
 				const before = this._buffer.slice(0, front);
 				const after = this._buffer.slice(back);
-				const index = buffer.indexOf("\n");
-				this.buffer = index === -1 ?
-					before + buffer + after :
-					before + buffer.slice(0, index + 1) + after + buffer.slice(index + 1);
+				this.buffer = before + line + after + rest;
 				this.chrono = this._history.size;
-				this.move(front + buffer.length);
+				this.anchor = front + line.length;
+				this.cursor = front + line.length;
 				break;
 			}
 			case "overtype": {
-				const before = this._buffer.slice(0, front);
-				const after = this._buffer.slice(Math.max(back, buffer.length));
 				const index = buffer.indexOf("\n");
-				this.buffer = index === -1 ?
-					before + buffer + after :
-					before + buffer.slice(0, index + 1) + after + buffer.slice(index + 1);
+				const line = index === -1 ? buffer : buffer.slice(0, index);
+				const rest = index === -1 ? "" : buffer.slice(index);
+				const before = this._buffer.slice(0, front);
+				const after = this._buffer.slice(Math.max(back, front + line.length));
+				this.buffer = before + line + after + rest;
 				this.chrono = this._history.size;
-				this.move(front + buffer.length);
+				this.anchor = front + line.length;
+				this.cursor = front + line.length;
 				break;
 			}
 			case "replace": {
 				this.buffer = buffer;
 				this.chrono = this._history.size;
-				this.move(buffer.length);
+				this.anchor = buffer.length;
+				this.cursor = buffer.length;
 				break;
 			}
 			case "update": {
-				this._buffer = buffer;
-				this.move(buffer.length);
+				this.buffer = buffer;
+				this.anchor = buffer.length;
+				this.cursor = buffer.length;
 				break;
 			}
 		}
 
 		// Handles new lines
 		let line: string | null = this.read();
-		while(line !== null) this.emitter.emit("line", line);
+		while(line !== null) {
+			this.emitter.emit("line", line);
+			line = this.read();
+		}
 	}
 }
 
@@ -196,7 +216,7 @@ export class BiosStdin {
 export class BiosStdout {
 	// Declares fields
 	private _buffer: string;
-	// Internal event emitter
+	// Event emitter
 	readonly emitter: EventEmitter;
 	
 	// Constructs class
@@ -206,41 +226,69 @@ export class BiosStdout {
 		this.emitter = new EventEmitter();
 	}
 
+	/** Buffer content */
 	get buffer() {
+		// Returns buffer
 		return this._buffer;
 	}
 
 	private set buffer(buffer: string) {
+		// Updates buffer
 		const cached = this._buffer;
 		this._buffer = buffer;
+
+		// Emits event
 		if(cached != this._buffer) this.emitter.emit("updateBuffer");
 	}
 
+	/** Clears standard output system */
 	clear(): void {
+		// Writes buffer
 		this.write("", "replace");
 	}
 
+	/** Reads from standard output system */
 	read(): string | null {
+		// Finds index
 		const index = this._buffer.indexOf("\n");
 		if(index === -1) return null;
 
+		// Initializes read
 		const line = this._buffer.slice(0, index + 1);
 		const rest = this._buffer.slice(index + 1);
+
+		// Reads buffer
+		this.buffer = rest;
+
+		// Returns line
+		return line;
 	}
 
+	/** Writes to standard output system */
 	write(
 		buffer: string,
 		mode: "append" | "replace" = "append"
 	): void {
-		
+		// Updates
+		switch(mode) {
+			case "append": {
+				this.buffer += buffer;
+				break;
+			}
+			case "replace": {
+				this.buffer = buffer;
+				break;
+			}
+		}
 	}
 }
 
 // Defines bios console class
-/** Console interface for simulated BIOS */
+/** Console interface for BIOS */
 export class BiosConsole {
 	// Declares fields
-	/** Internal event emitter */
+	private _mode: "insert" | "overtype";
+	/** Event emitter */
 	readonly emitter: EventEmitter;
 	/** Standard input system */
 	readonly stdin: BiosStdin;
@@ -250,26 +298,147 @@ export class BiosConsole {
 	// Constructs class
 	constructor() {
 		// Initializes fields
+		this._mode = "insert";
 		this.emitter = new EventEmitter();
 		this.stdin = new BiosStdin();
 		this.stdout = new BiosStdout();
 
-	}
-
-	async copy(): Promise<void> {
-
-	}
-
-	async input(content: unknown): void {
+		// Emits standard input system events
+		const emitUpdateStdin = () => this.emitter.emit("updateStdin");
+		this.stdin.emitter.on("line", (line: string) => this.emitter.emit("line", line));
+		this.stdin.emitter.on("updateAnchor", emitUpdateStdin);
+		this.stdin.emitter.on("updateBuffer", emitUpdateStdin);
+		this.stdin.emitter.on("updateChrono", emitUpdateStdin);
+		this.stdin.emitter.on("updateCursor", emitUpdateStdin);
+		this.emitter.on("updateMode", emitUpdateStdin);
 		
+		// Emits standard output system events
+		const emitUpdateStdout = () => this.emitter.emit("updateStdout");
+		this.stdout.emitter.on("updateBuffer", emitUpdateStdout);
 	}
 
-	async output(content: unknown): Promise<void> {
-
+	/** Anchor position */
+	get anchor() {
+		// Returns anchor
+		return this.stdin.anchor;
+	}
+	
+	/** Buffer content */
+	get buffer() {
+		// Returns buffer
+		return this.stdin.buffer;
 	}
 
+	/** Chrono index */
+	get chrono() {
+		// Returns chrono
+		return this.stdin.chrono;
+	}
+
+	/** Cursor position */
+	get cursor() {
+		// Returns cursor
+		return this.stdin.cursor;
+	}
+
+	/** Clears console */
+	clear(): void {
+		// Clears content
+		this.stdout.clear();	
+	}
+	
+	/** Copies selection to clipboard */
+	async copy(): Promise<void> {
+		// Copies selection
+		const selection = document.getSelection();
+		await navigator.clipboard.writeText(selection === null ? this.stdin.buffer : selection.toString());
+	}
+
+	/** Removes content in specified direction and length */
+	delete(length: number): void {
+		// Removes content
+		this.stdin.delete(length);
+	}
+
+	/** Enters content to standard input system */
+	enter(content: unknown): void {
+		// Writes content
+		this.input(BiosConsole.purify(content), this._mode);
+	}
+
+	/** Resets standard input system */
+	escape(): void {
+		// Clears
+		this.stdin.clear();
+	}
+
+	/** Writes raw content to standard input system */
+	input(
+		content: string,
+		mode: "insert" | "overtype" | "replace" | "update" = "insert"
+	): void {
+		// Writes content
+		this.stdin.write(content, mode);
+	}
+
+	/** Insertion mode */
+	get mode() {
+		// Returns mode
+		return this._mode;
+	}
+
+	set mode(mode: "insert" | "overtype") {
+		// Updates mode
+		const cache = this._mode;
+		this._mode = mode;
+
+		// Emits event
+		if(cache !== this._mode) this.emitter.emit("updateMode");
+	}
+
+	/** Moves cursor to specified position */
+	move(cursor: number, shift: boolean = false): void {
+		// Moves cursor
+		this.stdin.move(cursor, shift);
+	}
+
+	/** Writes raw content to standard output system */
+	output(
+		content: string,
+		mode: "append" | "replace" = "append"
+	): void {
+		// Writes content
+		this.stdout.write(content, mode);
+	}
+
+	/** Pastes selection to standard input system */
 	async paste(): Promise<void> {
+		// Writes content
+		this.enter(await navigator.clipboard.readText());
+	}
 
+	/** Purifies content into displayable characters */
+	static purify(content: unknown): string {
+		// Returns purified content
+		return String(content).replace(/[^\na-zA-Z0-9()[\]{}<>'"`!?@#$%^&~_+\-*/=\\|;:,. ]/g, "");
+	}
+
+	/** Prints content to standard output system */
+	print(content: unknown = "", end: string = "\n") {
+		// Writes content
+		this.output(BiosConsole.purify(String(content) + end));
+	}
+
+	/** Moves cursor and anchor to specified range */
+	range(cursor: number, anchor: number = cursor): void {
+		// Moves cursor
+		this.stdin.range(cursor, anchor);
+	}
+
+	/** Moves chrono to specified index */
+	travel(chrono: number): void {
+		// Moves chrono
+		this.stdin.travel(chrono);
 	}
 }
 

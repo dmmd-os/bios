@@ -2,31 +2,31 @@
 /** Non-blocking event emitter */
 export class EventEmitter {
 	// Declares fields
-	private _listeners: { [ event: string ]: ((...parameters: unknown[]) => (Promise<void> | void))[] };
+	private _listeners: Map<string, ((...parameters: any[]) => (Promise<void> | void))[]>;
 
 	// Constructs class
 	constructor() {
 		// Initializes fields
-		this._listeners = {};
+		this._listeners = new Map();
 	}
 
 	/** Emits an event in sequence */
-	async bubble(event: string, ...parameters: unknown[]): Promise<void> {
+	async bubble(event: string, ...parameters: any[]): Promise<void> {
 		// Handles empty event
-		if(!(event in this._listeners)) return;
+		if(!this._listeners.has(event)) return;
 
 		// Evokes listeners
-		const listeners = this._listeners[event];
+		const listeners = this._listeners.get(event)!;
 		for(let i = 0; i < listeners.length; i++) await listeners[i](...parameters);
 	}
 
 	/** Emit an event in parallel */
-	async broadcast(event: string, ...parameters: unknown[]): Promise<void> {
+	async broadcast(event: string, ...parameters: any[]): Promise<void> {
 		// Handles empty event
-		if(!(event in this._listeners)) return;
+		if(!this._listeners.has(event)) return;
 
 		// Evokes listeners
-		const listeners = this._listeners[event];
+		const listeners = this._listeners.get(event)!;
 		const tasks: (Promise<void> | void)[] = [];
 		for(let i = 0; i < listeners.length; i++) tasks.push(listeners[i](...parameters));
 
@@ -35,41 +35,41 @@ export class EventEmitter {
 	}
 
 	/** Emit an event without awaiting for completion */
-	emit(event: string, ...parameters: unknown[]): void {
+	emit(event: string, ...parameters: any[]): void {
 		// Handles empty event
-		if(!(event in this._listeners)) return;
+		if(!this._listeners.has(event)) return;
 
 		// Evokes listeners
-		const listeners = this._listeners[event];
+		const listeners = this._listeners.get(event)!;
 		for(let i = 0; i < listeners.length; i++) listeners[i](...parameters);
 	}
 
 	/** Removes all same-reference listeners */
-	off(event: string, listener: (...parameters: unknown[]) => (Promise<void> | void)): void {
+	off(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
 		// Handles empty event
-		if(!(event in this._listeners)) return;
+		if(!this._listeners.has(event)) return;
 
 		// Removes listeners
-		const listeners = this._listeners[event];
+		const listeners = this._listeners.get(event)!;
 		for(let i = listeners.length; i >= 0; i--) {
 			if(listeners[i] === listener) listeners.splice(i, 1);
 		}
 
 		// Deletes empty event
-		if(listeners.length === 0) delete this._listeners[event];
+		if(listeners.length === 0) this._listeners.delete(event);
 	}
 
 	/** Appends an listener */
-	on(event: string, listener: (...parameters: unknown[]) => (Promise<void> | void)): void {
+	on(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
 		// Creates new event
-		if(!(event in this._listeners)) this._listeners[event] = [];
+		if(!this._listeners.has(event)) this._listeners.set(event, []);
 		
 		// Appends listener
-		this._listeners[event].push(listener);
+		this._listeners.get(event)!.push(listener);
 	}
 
 	/** Appends an one-time listener */
-	once(event: string, listener: (...parameters: unknown[]) => (Promise<void> | void)): void {
+	once(event: string, listener: (...parameters: any[]) => (Promise<void> | void)): void {
 		// Defines wrapper
 		const wrapper = () => {
 			listener();
