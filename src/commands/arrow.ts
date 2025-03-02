@@ -11,16 +11,25 @@ export const arrow = new BiosCommand(
 		// Fetches parameters
 		const parameters = flags.get("")!;
 
-		// Handles empty parameters
-		if(parameters.length === 0 && !flags.has("-default")) {
-			bios.console.print(texts.commands.ARROW.NO_ARROW);
+		// Handles reset flag
+		if(flags.has("--reset")) {
+			bios.console.arrow = "> ";
+			await bios.storage.delete("arrow");
+			bios.console.print(texts.commands.ARROW.SUCCESS);
 			return;
 		}
 
-		// Updates arrow
-		bios.console.arrow = flags.has("--default") ? "> " : (parameters[0] + " ");
-		await bios.storage.write("arrow", bios.console.arrow);
-		bios.console.print();
+		// Handles custom arrow
+		if(parameters.length !== 0) {
+			const arrow = parameters[0] + " ";
+			bios.console.arrow = arrow;
+			await bios.storage.write("arrow", arrow);
+			bios.console.print(texts.commands.ARROW.SUCCESS);
+			return;
+		}
+		
+		// Handles invalid input
+		bios.console.print(texts.commands.ARROW.NO_ARROW);
 	}
 );
 

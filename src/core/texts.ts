@@ -1,10 +1,13 @@
+// Imports
+import version from "./version";
+
 // Defines constants
 export const commands = {
 	"ARROW": {
 		"DESCRIPTION": "Customizes input arrow",
 		"DETAILS": `--- Usage ---
 arrow <arrow>
-arrow <--default>
+arrow <--reset>
 "Sets the input arrow to a specified arrow. This customization is carried over sessions."
 
 --- Parameters ---
@@ -12,12 +15,14 @@ arrow <--default>
 "Specified input arrow."
 
 --- Flags ---
-<--default>
-"Sets the input arrow back to its default value."
+<--reset>
+"Resets the input arrow back to its default value."
 
 --- Examples ---
-clear`,
-		"NO_ARROW": "Arrow cannot be empty"
+arrow dsh:
+arrow --reset`,
+		"NO_ARROW": "Specify a custom arrow to customize",
+		"SUCCESS": "Successly updated arrow"
 	},
 	"CLEAR": {
 		"DESCRIPTION": "Clears the terminal",
@@ -75,15 +80,34 @@ history
 
 --- Example ---
 history`,
-		"HISTORY_LIST": "--- History ---",
+		"HISTORY_LIST": "--- History ---"
 	},
+	"VERSION": {
+		"DESCRIPTION": "Displays BIOS version",
+		"DETAILS": `--- Usage ---
+version
+"Shows current BIOS build hash."
+
+--- Parameters ---
+
+--- Flags ---
+
+--- Example ---
+version`,
+		"DISPLAY_HASH": "Build hash: %VERSION%"
+	}
 };
 export const debug = {
 	"END_CHORE": "debug: Chore ended: '%REFERENCE%'",
 	"START_CHORE": "debug: Chore started: '%REFERENCE%'"
 }
 export const shell = {
-	"COMMAND_NOT_FOUND": "dsh: Command not found: '%ALIAS%'"
+	"COMMAND_NOT_FOUND": "dsh: Command not found: '%ALIAS%'",
+	"COPYRIGHT": `--- Welcome to DmmD BIOS ---
+dsh - The DmmD Shell - DmmD @ 2025 - 2025
+Type 'help' for a list of commands.
+
+Build hash: ${version}`
 };
 
 // Exports

@@ -21,5 +21,8 @@ if(await bios.storage.probe("arrow")) bios.console.arrow = await bios.storage.re
 // Registers commands
 for(let alias in commands) bios.register(commands[alias as keyof typeof commands]);
 
+// Prints copyright
+bios.console.print(texts.shell.COPYRIGHT);
+
 // Exports
 export default bios;

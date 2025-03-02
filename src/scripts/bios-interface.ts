@@ -1,5 +1,6 @@
 // Imports
 import * as texts from "../core/texts";
+import version from "../core/version";
 import ArraySet from "./array-set";
 import BiosCommand from "./bios-command";
 import BiosConsole from "./bios-console";
@@ -25,6 +26,8 @@ export class BiosInterface {
 	readonly storage: PersistentStorage;
 	/** Bios terminal */
 	readonly terminal: BiosTerminal;
+	/** Bios version */
+	readonly version: string;
 
 	// Creates class
 	private constructor(storage: PersistentStorage) {
@@ -38,6 +41,7 @@ export class BiosInterface {
 		this.emitter = new EventEmitter();
 		this.storage = storage;
 		this.terminal = new BiosTerminal(this.console);
+		this.version = version;
 
 		// Handle keyboard event
 		const handleKey: (key: KeyboardEvent) => Promise<boolean> = async (key: KeyboardEvent) => {
@@ -233,7 +237,7 @@ export class BiosInterface {
 			if(/^-.*?=(?:.*?,?)*$/.test(parameter)) {
 				// Parses parameter
 				const index = parameter.indexOf("=");
-				const key = parameter.slice(1, index);
+				const key = parameter.slice(0, index);
 				const values = parameter.slice(index + 1).split(",");
 
 				// Appends flag
@@ -243,12 +247,9 @@ export class BiosInterface {
 
 			// Handles regular flag
 			else if(/^-.*$/.test(parameter)) {
-				// Parses parameter
-				const key = parameter.slice(1);
-
 				// Appends flag
 				flag = [];
-				flags.set(key, flag);
+				flags.set(parameter, flag);
 			}
 
 			// Handles parameter
