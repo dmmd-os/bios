@@ -22,7 +22,7 @@ arrow <--reset>
 arrow dsh:
 arrow --reset`,
 		"NO_ARROW": "Specify a custom arrow to customize",
-		"SUCCESS": "Successly updated arrow"
+		"SUCCESS": "Successfully updated arrow"
 	},
 	"CLEAR": {
 		"DESCRIPTION": "Clears the terminal",
