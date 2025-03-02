@@ -12,7 +12,13 @@ export class BiosStdin {
 	private _cursor: number;
 	private _history: ArraySet<string>;
 	/** Event emitter */
-	readonly emitter: EventEmitter;
+	readonly emitter: EventEmitter<{
+		feedLine: (line: string) => void,
+		updateAnchor: () => void,
+		updateBuffer: () => void,
+		updateChrono: () => void,
+		updateCursor: () => void
+	}>;
 
 	// Constructs class
 	constructor() {
@@ -91,12 +97,6 @@ export class BiosStdin {
 		if(cache != this._cursor) this.emitter.emit("updateCursor");
 	}
 
-	/** History of past inputs */
-	get history(): readonly string[] {
-		// Returns history array
-		return this._history.array;
-	}
-
 	/** Removes content in specified direction and length */
 	delete(length: number): void {
 		// Updates cursor
@@ -104,6 +104,12 @@ export class BiosStdin {
 		
 		// Updates buffer
 		this.write("");
+	}
+
+	/** History of past inputs */
+	get history(): readonly string[] {
+		// Returns history array
+		return this._history.array;
 	}
 
 	/** Moves cursor to specified position */
@@ -211,7 +217,7 @@ export class BiosStdin {
 		// Handles new lines
 		let line: string | null = this.read();
 		while(line !== null) {
-			this.emitter.emit("line", line);
+			this.emitter.emit("feedLine", line);
 			line = this.read();
 		}
 	}
@@ -223,7 +229,9 @@ export class BiosStdout {
 	// Declares fields
 	private _buffer: string;
 	// Event emitter
-	readonly emitter: EventEmitter;
+	readonly emitter: EventEmitter<{
+		updateBuffer: () => void
+	}>;
 	
 	// Constructs class
 	constructor() {
@@ -253,23 +261,6 @@ export class BiosStdout {
 		this.write("", "replace");
 	}
 
-	/** Reads from standard output system */
-	read(): string | null {
-		// Finds index
-		const index = this._buffer.indexOf("\n");
-		if(index === -1) return null;
-
-		// Initializes read
-		const line = this._buffer.slice(0, index + 1);
-		const rest = this._buffer.slice(index + 1);
-
-		// Reads buffer
-		this.buffer = rest;
-
-		// Returns line
-		return line;
-	}
-
 	/** Writes to standard output system */
 	write(
 		buffer: string,
@@ -296,7 +287,13 @@ export class BiosConsole {
 	private _arrow: string;
 	private _mode: "insert" | "overtype";
 	/** Event emitter */
-	readonly emitter: EventEmitter;
+	readonly emitter: EventEmitter<{
+		feedLine: (line: string) => void,
+		updateArrow: () => void,
+		updateMode: () => void,
+		updateStdin: () => void,
+		updateStdout: () => void
+	}>;
 	/** Standard input system */
 	readonly stdin: BiosStdin;
 	/** Standard output system */
@@ -313,10 +310,7 @@ export class BiosConsole {
 
 		// Handles standard input system events
 		const emitUpdateStdin = () => this.emitter.emit("updateStdin");
-		this.stdin.emitter.on("line", (line: string) => {	
-			this.print(this._arrow + line);
-			this.emitter.emit("line", line);
-		});
+		this.stdin.emitter.on("feedLine", (line: string) => this.emitter.emit("feedLine", line));
 		this.stdin.emitter.on("updateAnchor", emitUpdateStdin);
 		this.stdin.emitter.on("updateBuffer", emitUpdateStdin);
 		this.stdin.emitter.on("updateChrono", emitUpdateStdin);
@@ -362,16 +356,16 @@ export class BiosConsole {
 		return this.stdin.chrono;
 	}
 
-	/** Cursor position */
-	get cursor() {
-		// Returns cursor
-		return this.stdin.cursor;
-	}
-
 	/** Clears console */
 	clear(): void {
 		// Clears content
 		this.stdout.clear();	
+	}
+
+	/** Cursor position */
+	get cursor() {
+		// Returns cursor
+		return this.stdin.cursor;
 	}
 	
 	/** Copies selection to clipboard */
@@ -400,7 +394,7 @@ export class BiosConsole {
 	}
 
 	/** History of past inputs */
-	get history(): readonly string[] {
+	get history() {
 		// Returns history array
 		return this.stdin.history;
 	}

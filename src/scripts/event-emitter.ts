@@ -1,10 +1,10 @@
 // Defines event emitter class
 /** Non-blocking event emitter */
-export class EventEmitter {
+export class EventEmitter<TypeListeners extends Record<string, (...parameters: any[]) => any>> {
 	// Declares fields
 	private _listeners: Map<
-		string,
-		((...parameters: any[]) => (Promise<void> | void))[]
+		keyof TypeListeners,
+		TypeListeners[keyof TypeListeners][]
 	>;
 
 	// Constructs class
@@ -14,7 +14,10 @@ export class EventEmitter {
 	}
 
 	/** Emits an event in sequence */
-	async bubble(event: string, ...parameters: any[]): Promise<void> {
+	async bubble<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		...parameters: Parameters<TypeListeners[TypeEvent]>
+	): Promise<void> {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
 		if(typeof listeners === "undefined") return;
@@ -24,7 +27,10 @@ export class EventEmitter {
 	}
 
 	/** Emit an event in parallel */
-	async broadcast(event: string, ...parameters: any[]): Promise<void> {
+	async broadcast<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		...parameters: Parameters<TypeListeners[TypeEvent]>
+	): Promise<void> {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
 		if(typeof listeners === "undefined") return;
@@ -38,7 +44,10 @@ export class EventEmitter {
 	}
 
 	/** Emit an event without awaiting for completion */
-	emit(event: string, ...parameters: any[]): void {
+	emit<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		...parameters: Parameters<TypeListeners[TypeEvent]>
+	): void {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
 		if(typeof listeners === "undefined") return;
@@ -48,9 +57,9 @@ export class EventEmitter {
 	}
 
 	/** Removes all same-reference listeners */
-	off(
-		event: string,
-		listener: (...parameters: any[]) => (Promise<void> | void)
+	off<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		listener: TypeListeners[TypeEvent]
 	): void {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
@@ -66,9 +75,9 @@ export class EventEmitter {
 	}
 
 	/** Appends an listener */
-	on(
-		event: string,
-		listener: (...parameters: any[]) => (Promise<void> | void)
+	on<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		listener: TypeListeners[TypeEvent]
 	): void {
 		// Creates new event
 		if(!this._listeners.has(event)) this._listeners.set(event, []);
@@ -78,15 +87,15 @@ export class EventEmitter {
 	}
 
 	/** Appends an one-time listener */
-	once(
-		event: string,
-		listener: (...parameters: any[]) => (Promise<void> | void)
+	once<TypeEvent extends keyof TypeListeners>(
+		event: TypeEvent,
+		listener: TypeListeners[TypeEvent]
 	): void {
 		// Defines wrapper
-		const wrapper = () => {
-			listener();
+		const wrapper = ((...parameters: Parameters<TypeListeners[keyof TypeListeners]>) => {
+			listener(...parameters);
 			this.off(event, wrapper);
-		};
+		}) as TypeListeners[keyof TypeListeners];
 
 		// Appends listener
 		this.on(event, wrapper);

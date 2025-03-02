@@ -21,7 +21,10 @@ export class BiosInterface {
 	/** Bios console */
 	readonly console: BiosConsole;
 	/** Event emitter */
-	readonly emitter: EventEmitter;
+	readonly emitter: EventEmitter<{
+		endChore: (reference: number, result: any[]) => void,
+		startChore: (reference: number) => void
+	}>;
 	/** Bios storage */
 	readonly storage: PersistentStorage;
 	/** Bios terminal */
@@ -136,7 +139,7 @@ export class BiosInterface {
 		});
 
 		// Handles console event
-		this.console.emitter.on("line", (line: string) => this.shell(line));
+		this.console.emitter.on("feedLine", (line: string) => this.shell(line));
 	}
 
 	/** Current working chore */
