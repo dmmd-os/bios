@@ -12,6 +12,16 @@ export class ArraySet<Type> {
 		this._set = new Set<Type>();
 	}
 
+	/** Adds element to array set */
+	add(element: Type, bump: boolean = false): void {
+		// Updates set
+		if(bump) this._set.delete(element);
+		this._set.add(element);
+
+		// Invalidates array
+		this._array = null;
+	}
+
 	/** Array conversion of array set */
 	get array(): readonly Type[] {
 		// Creates cache
@@ -19,15 +29,6 @@ export class ArraySet<Type> {
 
 		// Returns arary
 		return this._array;
-	}
-
-	/** Removes element from array set */
-	delete(element: Type): void {
-		// Updates set
-		this._set.delete(element);
-
-		// Invalidates array
-		this._array = null;
 	}
 
 	/** CLears array set */
@@ -39,14 +40,8 @@ export class ArraySet<Type> {
 		this._array = null;
 	}
 
-	/** Checks if array set contains element */
-	probe(element: Type): boolean {
-		// Returns probe status
-		return this._set.has(element);
-	}
-
 	/** Retrieves element at specific index */
-	read(index: number): Type | null {
+	index(index: number): Type | null {
 		// Fetches array
 		const array = this.array;
 
@@ -57,6 +52,12 @@ export class ArraySet<Type> {
 			return wrapped < 0 ? null : array[wrapped];
 		}
 		else return array[index];
+	}
+
+	/** Checks if array set contains element */
+	probe(element: Type): boolean {
+		// Returns probe status
+		return this._set.has(element);
 	}
 
 	/** Set conversion of array set */
@@ -71,11 +72,10 @@ export class ArraySet<Type> {
 		return this._set.size;
 	}
 
-	/** Adds element to array set */
-	write(element: Type, bump: boolean = false): void {
+	/** Removes element from array set */
+	remove(element: Type): void {
 		// Updates set
-		if(bump) this._set.delete(element);
-		this._set.add(element);
+		this._set.delete(element);
 
 		// Invalidates array
 		this._array = null;

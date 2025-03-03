@@ -1,10 +1,16 @@
-// Defines event emitter class
-/** Non-blocking event emitter */
-export class EventEmitter<TypeListeners extends Record<string, (...parameters: any[]) => any>> {
+// Defines emitter types
+/** Emitter listener callback */
+export type EmitterListener = (...parameters: any[]) => any;
+/** Emitter table */
+export type EmitterTable = Record<string, EmitterListener>;
+
+// Defines emitter class
+/** Event emitter */
+export class Emitter<TypeTable extends EmitterTable> {
 	// Declares fields
 	private _listeners: Map<
-		keyof TypeListeners,
-		TypeListeners[keyof TypeListeners][]
+		keyof TypeTable,
+		TypeTable[keyof TypeTable][]
 	>;
 
 	// Constructs class
@@ -13,10 +19,10 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 		this._listeners = new Map();
 	}
 
-	/** Emits an event in sequence */
-	async bubble<TypeEvent extends keyof TypeListeners>(
+	/** Emits an event sequentially */
+	async bubble<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		...parameters: Parameters<TypeListeners[TypeEvent]>
+		...parameters: Parameters<TypeTable[TypeEvent]>
 	): Promise<void> {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
@@ -26,10 +32,10 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 		for(let i = 0; i < listeners.length; i++) await listeners[i](...parameters);
 	}
 
-	/** Emit an event in parallel */
-	async broadcast<TypeEvent extends keyof TypeListeners>(
+	/** Emits a blocking event */
+	async broadcast<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		...parameters: Parameters<TypeListeners[TypeEvent]>
+		...parameters: Parameters<TypeTable[TypeEvent]>
 	): Promise<void> {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
@@ -43,10 +49,10 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 		await Promise.allSettled(tasks);
 	}
 
-	/** Emit an event without awaiting for completion */
-	emit<TypeEvent extends keyof TypeListeners>(
+	/** Emits a non-blocking event */
+	emit<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		...parameters: Parameters<TypeListeners[TypeEvent]>
+		...parameters: Parameters<TypeTable[TypeEvent]>
 	): void {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
@@ -57,9 +63,9 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 	}
 
 	/** Removes all same-reference listeners */
-	off<TypeEvent extends keyof TypeListeners>(
+	off<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		listener: TypeListeners[TypeEvent]
+		listener: TypeTable[TypeEvent]
 	): void {
 		// Handles empty event
 		const listeners = this._listeners.get(event);
@@ -75,9 +81,9 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 	}
 
 	/** Appends an listener */
-	on<TypeEvent extends keyof TypeListeners>(
+	on<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		listener: TypeListeners[TypeEvent]
+		listener: TypeTable[TypeEvent]
 	): void {
 		// Creates new event
 		if(!this._listeners.has(event)) this._listeners.set(event, []);
@@ -87,15 +93,15 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 	}
 
 	/** Appends an one-time listener */
-	once<TypeEvent extends keyof TypeListeners>(
+	once<TypeEvent extends keyof TypeTable>(
 		event: TypeEvent,
-		listener: TypeListeners[TypeEvent]
+		listener: TypeTable[TypeEvent]
 	): void {
 		// Defines wrapper
-		const wrapper = ((...parameters: Parameters<TypeListeners[keyof TypeListeners]>) => {
+		const wrapper = ((...parameters: Parameters<TypeTable[keyof TypeTable]>) => {
 			listener(...parameters);
 			this.off(event, wrapper);
-		}) as TypeListeners[keyof TypeListeners];
+		}) as TypeTable[keyof TypeTable];
 
 		// Appends listener
 		this.on(event, wrapper);
@@ -103,4 +109,4 @@ export class EventEmitter<TypeListeners extends Record<string, (...parameters: a
 }
 
 // Exports
-export default EventEmitter;
+export default Emitter;

@@ -5,23 +5,23 @@ import ArraySet from "./array-set";
 import BiosCommand from "./bios-command";
 import BiosConsole from "./bios-console";
 import BiosTerminal from "./bios-terminal";
-import EventEmitter from "./event-emitter";
+import Emitter from "./emitter";
 import PersistentStorage from "./persistent-storage";
-import ShiftQueue from "./shift-queue";
+import UniqueQueue from "./unique-queue";
 
 // Defines bios interface class
 /** Central logic for bios */
 export class BiosInterface {
 	// Declares fields
 	private _busy: Promise<void> | null;
-	private _chores: ShiftQueue<() => Promise<void>>;
+	private _chores: UniqueQueue<() => Promise<void>>;
 	private _commands: Map<string, BiosCommand>;
 	private _os: null;
 	private _registry: ArraySet<BiosCommand>;
 	/** Bios console */
 	readonly console: BiosConsole;
 	/** Event emitter */
-	readonly emitter: EventEmitter<{
+	readonly emitter: Emitter<{
 		endChore: (reference: number, result: any[]) => void,
 		updateBusy: () => void,
 		startChore: (reference: number) => void
@@ -37,12 +37,12 @@ export class BiosInterface {
 	private constructor(storage: PersistentStorage) {
 		// Initializes fields
 		this._busy = null;
-		this._chores = new ShiftQueue();
+		this._chores = new UniqueQueue();
 		this._commands = new Map();
 		this._os = null;
 		this._registry = new ArraySet();
 		this.console = new BiosConsole();
-		this.emitter = new EventEmitter();
+		this.emitter = new Emitter();
 		this.storage = storage;
 		this.terminal = new BiosTerminal(this.console);
 		this.version = version;
@@ -171,13 +171,13 @@ export class BiosInterface {
 			
 			// Fetches chore
 			await this.emitter.broadcast("endChore", reference, results);
-			const next = this._chores.read();
+			const next = this._chores.pull();
 			this.busy = next !== null ? next() : null;
 		};
-		this._chores.write(chore);
+		this._chores.push(chore);
 		
 		// Fetches chore
-		if(this.busy === null) this.busy = this._chores.read()!();
+		if(this.busy === null) this.busy = this._chores.pull()!();
 	}
 
 	/** Chore queue */
@@ -215,7 +215,7 @@ export class BiosInterface {
 		// Registers command
 		if(this._registry.probe(command)) return;
 		for(let i = 0; i < command.aliases.length; i++) this._commands.set(command.aliases[i], command);
-		this._registry.write(command);
+		this._registry.add(command);
 	}
 
 	/** Command registry */
@@ -299,7 +299,7 @@ export class BiosInterface {
 			const alias = command.aliases[i];
 			if(this._commands.get(alias) === command) this._commands.delete(alias);
 		}
-		this._registry.delete(command);
+		this._registry.remove(command);
 	}
 }
 

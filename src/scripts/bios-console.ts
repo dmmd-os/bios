@@ -1,6 +1,6 @@
 // Imports
 import ArraySet from "./array-set";
-import EventEmitter from "./event-emitter";
+import Emitter from "./emitter";
 
 // Defines bios stdin class
 /** Standard input system for bios console */
@@ -12,7 +12,7 @@ export class BiosStdin {
 	private _cursor: number;
 	private _history: ArraySet<string>;
 	/** Event emitter */
-	readonly emitter: EventEmitter<{
+	readonly emitter: Emitter<{
 		feedLine: (line: string) => void,
 		updateAnchor: () => void,
 		updateBuffer: () => void,
@@ -28,7 +28,7 @@ export class BiosStdin {
 		this._chrono = 0;
 		this._cursor = 0;
 		this._history = new ArraySet();
-		this.emitter = new EventEmitter();
+		this.emitter = new Emitter();
 	}
 
 	/** Anchor position */
@@ -142,7 +142,7 @@ export class BiosStdin {
 		const rest = this._buffer.slice(index + 1);
 
 		// Remembers line
-		if(line.trim().length !== 0) this._history.write(line, true);
+		if(line.trim().length !== 0) this._history.add(line, true);
 		
 		// Reads buffer
 		this.buffer = rest;
@@ -161,7 +161,7 @@ export class BiosStdin {
 		this.chrono = chrono;
 
 		// Updates buffer
-		if(cache != this._chrono) this.write(this._history.read(this._chrono) ?? "", "update");
+		if(cache != this._chrono) this.write(this._history.index(this._chrono) ?? "", "update");
 	}
 	
 	/** Writes to standard input system */
@@ -229,7 +229,7 @@ export class BiosStdout {
 	// Declares fields
 	private _buffer: string;
 	// Event emitter
-	readonly emitter: EventEmitter<{
+	readonly emitter: Emitter<{
 		updateBuffer: () => void
 	}>;
 	
@@ -237,7 +237,7 @@ export class BiosStdout {
 	constructor() {
 		// Initializes fields
 		this._buffer = "";
-		this.emitter = new EventEmitter();
+		this.emitter = new Emitter();
 	}
 
 	/** Buffer content */
@@ -287,7 +287,7 @@ export class BiosConsole {
 	private _arrow: string;
 	private _mode: "insert" | "overtype";
 	/** Event emitter */
-	readonly emitter: EventEmitter<{
+	readonly emitter: Emitter<{
 		feedLine: (line: string) => void,
 		updateArrow: () => void,
 		updateMode: () => void,
@@ -304,7 +304,7 @@ export class BiosConsole {
 		// Initializes fields
 		this._arrow = "> ";
 		this._mode = "insert";
-		this.emitter = new EventEmitter();
+		this.emitter = new Emitter();
 		this.stdin = new BiosStdin();
 		this.stdout = new BiosStdout();
 
