@@ -23,6 +23,7 @@ export class BiosInterface {
 	/** Event emitter */
 	readonly emitter: EventEmitter<{
 		endChore: (reference: number, result: any[]) => void,
+		updateBusy: () => void,
 		startChore: (reference: number) => void
 	}>;
 	/** Bios storage */
@@ -148,6 +149,37 @@ export class BiosInterface {
 		return this._busy;
 	}
 
+	private set busy(busy: Promise<void> | null) {
+		// Updates busy
+		const cache = this._busy;
+		this._busy = busy;
+
+		// Emits event
+		if(cache !== this._busy) this.emitter.emit("updateBusy");
+	}
+
+	/** Creates a new chore */
+	chore(chores: ((reference: number) => Promise<void>)[]): void {
+		// Writes chore
+		const reference = this._chores.index + this._chores.size;
+		const chore: () => Promise<void> = async () => {
+			// Runs current chore
+			await this.emitter.broadcast("startChore", reference);
+			const calls: Promise<any>[] = [];
+			for(let i = 0; i < chores.length; i++) calls.push(chores[i](reference));
+			const results = await Promise.allSettled(calls);
+			
+			// Fetches chore
+			await this.emitter.broadcast("endChore", reference, results);
+			const next = this._chores.read();
+			this.busy = next !== null ? next() : null;
+		};
+		this._chores.write(chore);
+		
+		// Fetches chore
+		if(this.busy === null) this.busy = this._chores.read()!();
+	}
+
 	/** Chore queue */
 	get chores() {
 		// Returns queue
@@ -158,28 +190,6 @@ export class BiosInterface {
 	get commands(): ReadonlyMap<string, BiosCommand> {
 		// Returns commands
 		return this._commands;
-	}
-
-	/** Creates a new chore */
-	chore(chores: ((reference: number) => Promise<void>)[]): void {
-		// Writes chore
-		const reference = this._chores.index + this._chores.size;
-		const chore: () => Promise<void> = async () => {
-			// Runs current chore
-			this.emitter.emit("startChore", reference);
-			const calls: Promise<any>[] = [];
-			for(let i = 0; i < chores.length; i++) chores[i](reference);
-			const results = await Promise.allSettled(calls);
-			
-			// Fetches chore
-			this.emitter.emit("endChore", reference, results);
-			const next = this._chores.read();
-			this._busy = next !== null ? next() : null;
-		};
-		this._chores.write(chore);
-		
-		// Fetches chore
-		if(this._busy === null) this._busy = this._chores.read()!();
 	}
 
 	/** Instantiates bios interface asynchronously */
@@ -215,6 +225,13 @@ export class BiosInterface {
 
 	/** Executes command */
 	shell(content: string): void {
+		// Prints content
+		this.chore([
+			async () => {
+				this.console.print(this.console.arrow + content);
+			}
+		]);
+
 		// Parses content
 		if(content.trim().length === 0) return;
 		const raw = content;
@@ -224,7 +241,11 @@ export class BiosInterface {
 		const alias = vector[0];
 		const command = this._commands.get(alias)
 		if(typeof command === "undefined") {
-			this.console.print(texts.shell.COMMAND_NOT_FOUND.replace(/%ALIAS%/g, alias));
+			this.chore([
+				async () => {
+					this.console.print(texts.shell.COMMAND_NOT_FOUND.replace(/%ALIAS%/g, alias));
+				}
+			]);
 			return;
 		}
 
@@ -264,7 +285,9 @@ export class BiosInterface {
 
 		// Runs command
 		this.chore([
-			(reference) => command.callback(flags, vector, raw, reference)
+			async (reference) => {
+				await command.callback(flags, vector, raw, reference);
+			}
 		]);
 	}
 
